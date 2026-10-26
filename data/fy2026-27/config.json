@@ -1,0 +1,32 @@
+{
+  "fy": "2026-27",
+  "entity": "Axi Digital India Private Limited (AUS055)",
+  "startMonth": "2026-04",
+  "glFolder": "data/fy2026-27/gl",
+  "outFolder": "data/fy2026-27/out",
+  "openingTb": "data/fy2025-26/inr_tb_from_gl_31mar2026.csv",
+  "openingRec": "data/fy2025-26/recon_gl_vs_audited_31mar2026.csv",
+  "openingUsd": { "file": "data/fy2026-27/usd_tb_apr-sep2026.csv", "column": "opening_usd_01apr2026" },
+  "schedule3": "data/mappings/schedule3_fy2026-27.csv",
+  "reviewItems": "data/mappings/review_items_fy2026-27.csv",
+  "yearEndAudited": "data/fy2026-27/audited_31mar2027.csv",
+
+  "capitalPattern": "ADDITIONAL CAPITAL|^INW \\S+ AUD|Capital Injection into Axi Digital India$",
+  "fdPattern": "FD BOOKED|SWEEP-IN",
+  "bankAccounts": ["100455-IN1", "100555-IN1", "100555-IN2"],
+
+  "usdSuppliers": [
+    { "supplier": "CANT004", "account": "630180", "name": "Anthropic" },
+    { "supplier": "CLOV003", "account": "630180", "name": "Lovable" },
+    { "supplier": "CMOO006", "account": "630180", "name": "Kimi" }
+  ],
+  "descriptionRules": [
+    { "match": "Manual Payment 27/04/2026", "account": "660100", "treatment": "Fireblocks USD bill paid in INR" },
+    { "match": "Anthropic", "account": "630180", "treatment": "USD AI tool bill paid in INR" },
+    { "match": "Manual Payment", "account": "630180", "treatment": "USD AI tool bill paid in INR" }
+  ],
+  "excludeRecords": [
+    { "record": "229178727", "reason": "Already in audited opening (FY26 MCA fee moved from equity to expense)" },
+    { "record": "229178728", "reason": "Already in audited opening (FY26 MCA fee moved from equity to expense)" }
+  ]
+}

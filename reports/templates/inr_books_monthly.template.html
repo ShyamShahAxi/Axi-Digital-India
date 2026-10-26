@@ -1,0 +1,492 @@
+<title>Axi Digital INR Books</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#fafafa; --surface:#ffffff; --sunk:#f4f4f5; --ink:#09090b; --muted:#71717a; --line:#e4e4e7; --line-strong:#c9c5bf;
+  --brand:#18181b; --brand-ink:#fafafa;
+  --red:#ea1827; --red-ink:#ffffff;
+  --hero:#444c56; --hero-2:#6b737d; --hero-ink:#ffffff; --hero-muted:#eef0f2;
+  --ok:#15803d; --ok-soft:#ecfdf3; --warn:#b45409; --warn-soft:#fffbeb; --bad:#c5101d; --bad-soft:#fff1f2;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#6250d6;
+  --f-display:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#09090b; --surface:#18181b; --sunk:#121214; --ink:#fafafa; --muted:#a1a1aa; --line:#27272a; --line-strong:#3f3f46;
+  --brand:#fafafa; --brand-ink:#18181b;
+  --hero:#23272d; --hero-2:#3a4048; --hero-ink:#fafafa; --hero-muted:#d4d4d8;
+  --ok:#4ade80; --ok-soft:#0f2a1a; --warn:#fbc124; --warn-soft:#2e2208; --bad:#ff6772; --bad-soft:#3a0d10;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#09090b; --surface:#18181b; --sunk:#121214; --ink:#fafafa; --muted:#a1a1aa; --line:#27272a; --line-strong:#3f3f46;
+  --brand:#fafafa; --brand-ink:#18181b;
+  --hero:#23272d; --hero-2:#3a4048; --hero-ink:#fafafa; --hero-muted:#d4d4d8;
+  --ok:#4ade80; --ok-soft:#0f2a1a; --warn:#fbc124; --warn-soft:#2e2208; --bad:#ff6772; --bad-soft:#3a0d10;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--f-body);margin:0}
+h1,h2,p{margin:0}
+h1,h2{font-family:var(--f-display);text-wrap:balance;letter-spacing:-.015em}
+h1{font-size:1.875rem;font-weight:500;line-height:1.15;letter-spacing:-.025em}
+h2{font-size:1.125rem;font-weight:600;line-height:1.3}
+.gut{max-width:1180px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dim{color:var(--muted);font-size:.78rem}
+.note{font-size:.8rem;color:var(--muted);max-width:84ch}
+
+.appbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:10;background:var(--surface);border-bottom:1px solid var(--line)}
+.appbar-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding-block:12px 4px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:var(--red);color:var(--red-ink);font:700 .7rem var(--f-display);letter-spacing:.04em}
+.brand-name{font:600 1.05rem/1.15 var(--f-display);letter-spacing:-.01em}
+.brand-sub{font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-end{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;width:100%}
+.tabs button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:10px 12px 9px;font:500 .85rem var(--f-body);color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--red)}
+.tabs .count{font:600 .68rem var(--f-mono);background:var(--sunk);border-radius:999px;padding:1px 6px;color:var(--muted)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line-strong);border-radius:5px;overflow:hidden;background:var(--surface)}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font:600 .8rem var(--f-body);color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line-strong)}
+.seg button[aria-selected="true"]{background:var(--brand);color:var(--brand-ink)}
+.periodbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+
+.toggle{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font:600 .78rem var(--f-body);border-radius:4px;padding:6px 12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted)}
+.toggle:hover{border-color:var(--brand);color:var(--ink)}
+.toggle[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.toggle .dot{width:8px;height:8px;border-radius:50%}
+.toggle:focus-visible,.tabs button:focus-visible,.seg button:focus-visible,summary:focus-visible,tr.click:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input.search{font:400 .85rem var(--f-body);padding:7px 10px;border:1px solid var(--line-strong);border-radius:4px;background:var(--surface);color:var(--ink);min-width:220px}
+
+.wrap{padding-block:24px 72px;display:flex;flex-direction:column;gap:24px}
+.sub{color:var(--muted);font-size:.875rem;max-width:76ch;margin-top:4px}
+.block{display:flex;flex-direction:column;gap:10px;min-width:0}
+.block-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.hint{color:var(--muted);font-size:.8125rem;max-width:76ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.scroll{overflow-x:auto}
+
+.hero{display:flex;flex-wrap:wrap;gap:14px 40px;align-items:flex-end;padding:24px 26px;background:linear-gradient(105deg,var(--hero) 0%,var(--hero-2) 100%);color:var(--hero-ink);border-color:transparent}
+.hero > .figure:first-child{position:relative;padding-left:24px}
+.hero > .figure:first-child::before{content:"";position:absolute;left:0;top:22px;width:14px;height:14px;background:var(--red);clip-path:polygon(0 0,100% 0,0 100%)}
+.hero > .figure:first-child .eyebrow::before{content:"/// ";letter-spacing:.02em}
+.hero .eyebrow,.hero .dim{color:var(--hero-muted)}
+.hero .end{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end;text-align:right}
+.figure{display:flex;flex-direction:column;gap:3px;min-width:0}
+.big{font:500 3rem/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.val{font:500 1.1rem/1.3 var(--f-mono);font-variant-numeric:tabular-nums}
+.figures{display:flex;flex-wrap:wrap;overflow:hidden}
+.figures .figure{flex:1 1 170px;padding:14px 18px;box-shadow:-1px -1px 0 var(--line)}
+
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap;line-height:1.5}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.info{background:var(--sunk);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th{font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+th.cur,td.cur{background:var(--sunk)}
+tfoot td{font-weight:600;background:var(--sunk);border-top:1px solid var(--line);border-bottom:none}
+td.desc{max-width:420px;min-width:220px;color:var(--muted)}
+tr.sev-bad td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+tr.sev-warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+tr.muted-row td{color:var(--muted)}
+tr.grp td{background:var(--sunk);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding-block:7px}
+tr.sub td{font-weight:600}
+tr.tot td{font-weight:700;background:var(--sunk)}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--sunk)}
+tr.sel td{background:var(--sunk)}
+td.ind{padding-left:28px}
+td.sticky,th.sticky{position:sticky;left:0;background:var(--surface);z-index:1}
+tr.grp td.sticky,tr.tot td.sticky{background:var(--sunk)}
+.wide{min-width:760px}
+#pl-table th.sticky,#pl-table td.sticky,#bs-table th.sticky,#bs-table td.sticky,#ck-table th.sticky,#ck-table td.sticky{min-width:260px;box-shadow:inset -1px 0 0 var(--line)}
+#pl-table td.n,#bs-table td.n{padding-inline:10px}
+
+details.card > summary{cursor:pointer;padding:13px 18px;font:600 .95rem var(--f-display);display:flex;gap:10px;align-items:center;list-style:none}
+details.card > summary::-webkit-details-marker{display:none}
+details.card > summary::before{content:"";width:0;height:0;border-left:5px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
+details.card[open] > summary::before{transform:rotate(90deg)}
+details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap:12px}
+
+.chart-card{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.8rem;color:var(--muted)}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:6px}
+.cols{position:relative;display:grid;gap:10px;height:240px;padding-left:56px}
+.grid{position:absolute;left:56px;right:0;border-top:1px solid var(--line);font:400 .7rem var(--f-mono);color:var(--muted)}
+.grid span{position:absolute;right:calc(100% + 8px);top:-.6em;white-space:nowrap}
+.col{position:relative;display:flex;flex-direction:column-reverse;align-items:center;gap:2px;height:100%;cursor:pointer}
+.col.dimmed{opacity:.45}
+.seg-bar{width:min(46px,60%);min-height:1px}
+.col .seg-bar:last-of-type{border-radius:4px 4px 0 0}
+.ctop{font:500 .72rem var(--f-mono);color:var(--ink);margin-bottom:4px;white-space:nowrap}
+.xl{display:grid;gap:10px;padding-left:56px;font-size:.78rem;color:var(--muted);text-align:center}
+.xl .on{color:var(--ink);font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.78rem;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:5;min-width:240px}
+.tip b{display:block;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:16px}
+.tip .r i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.cell-chip{display:inline-block;width:100%;text-align:center}
+
+@media (max-width:560px){ .big{font-size:2.3rem} .hero .end{margin-left:0;align-items:flex-start;text-align:left} .cols,.xl{padding-left:40px;gap:4px} .grid{left:40px} .ctop{font-size:.6rem} }
+</style>
+
+<header class="appbar">
+  <div class="gut appbar-in">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">INR</span>
+      <div style="min-width:0"><p class="brand-name">INR Books</p><p class="brand-sub" id="brand-sub"></p></div>
+    </div>
+    <div class="bar-end"><span class="chip info">Source: Intacct GL, rolled from signed FS 31 Mar 2026</span></div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-t="ov" aria-selected="true">Overview</button>
+      <button role="tab" data-t="pl" aria-selected="false">Profit and loss</button>
+      <button role="tab" data-t="bs" aria-selected="false">Balance sheet</button>
+      <button role="tab" data-t="tb" aria-selected="false">Trial balance</button>
+      <button role="tab" data-t="ck" aria-selected="false">Monthly checks <span class="count" id="ck-count"></span></button>
+      <button role="tab" data-t="ar" aria-selected="false">Annual rec</button>
+      <button role="tab" data-t="ri" aria-selected="false">Review items <span class="count" id="ri-count"></span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="gut wrap">
+  <div class="periodbar"><span class="eyebrow">Period</span><div class="seg" role="tablist" aria-label="Period" id="period"></div><span class="dim" id="period-note"></span></div>
+
+  <section data-p="ov" class="block" style="gap:24px">
+    <div>
+      <p class="eyebrow" id="ov-eyebrow"></p>
+      <h1 id="ov-title"></h1>
+      <p class="sub">The audited 31 March 2026 balance sheet rolled forward month by month with every INR line from the Intacct GL. Revaluation, realised FX and the AUD side of capital receipts are left out, as agreed with the auditors. Capital received in INR is shown as share capital.</p>
+    </div>
+    <div class="card hero" id="hero"></div>
+    <div class="card figures" id="strip"></div>
+    <div class="block">
+      <div class="block-head"><h2>Monthly spend before capitalisation</h2><p class="hint">₹ lakh, gross of personnel costs capitalised to Asset WIP. Select a month to change the period.</p></div>
+      <div class="card chart-card"><div class="legend" id="legend"></div><div class="cols" id="cols"></div><div class="xl" id="xl"></div></div>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2 id="ov-checks-title"></h2><p class="hint">Run automatically every time the books are rebuilt.</p></div>
+      <div class="card scroll"><table id="ov-checks"></table></div>
+    </div>
+  </section>
+
+  <section data-p="pl" class="block" hidden>
+    <div><p class="eyebrow">Statement of profit and loss</p><h1>Result by month</h1>
+      <p class="sub">INR GL movements by account. Personnel costs capitalised to Asset WIP are a deduction from expenses. The selected month is shaded.</p></div>
+    <div class="card scroll"><table class="wide" id="pl-table"></table></div>
+    <p class="note">Capitalisation is booked as a month-end entry that reverses on the 1st and is rebooked at a cumulative figure, so single months can swing (April carries the 1 April reversal of the FY26 capitalisation; see review item 3). Quarter and year-to-date columns are the reliable view. No tax is booked during the year.</p>
+  </section>
+
+  <section data-p="bs" class="block" hidden>
+    <div><p class="eyebrow">Schedule III</p><h1>Balance sheet at each month-end</h1>
+      <p class="sub">Each caption starts from the signed 31 March 2026 figure and moves by the INR GL lines mapped to it. Reserves move by the result. Deferred tax and the security deposit have no GL account behind them and stay at the audited figure.</p></div>
+    <div class="card scroll"><table class="wide" id="bs-table"></table></div>
+  </section>
+
+  <section data-p="tb" class="block" hidden>
+    <div><p class="eyebrow">Trial balance, GL basis</p><h1 id="tb-title"></h1>
+      <p class="sub">The FY 2025-26 INR GL closing plus the INR movements for the year. It differs from the audited figures only by the auditors' adjustments that are not in Intacct (see Annual rec). Select an account to see its lines for the period.</p></div>
+    <div class="filters">
+      <input class="search" id="tb-q" type="search" placeholder="Search account or name" aria-label="Search accounts">
+      <button type="button" class="toggle" data-f="BS" aria-pressed="true">Balance sheet</button>
+      <button type="button" class="toggle" data-f="P&amp;L" aria-pressed="true">Profit and loss</button>
+    </div>
+    <div class="card scroll"><table class="wide" id="tb-table"></table></div>
+    <div class="block" id="lines-block" hidden>
+      <div class="block-head"><h2 id="lines-title"></h2><p class="hint" id="lines-hint"></p></div>
+      <div class="card scroll"><table class="wide" id="lines-table"></table></div>
+    </div>
+  </section>
+
+  <section data-p="ck" class="block" hidden>
+    <div><p class="eyebrow">Close checklist</p><h1>Monthly checks</h1>
+      <p class="sub">Every check for every month, from <span class="num">checks_by_month.csv</span>. Hover a cell for the detail.</p></div>
+    <div class="card scroll"><table class="wide" id="ck-table"></table></div>
+    <details class="card">
+      <summary>GL exports used</summary>
+      <div class="inner"><p class="note">Files in the year's <span class="num">gl</span> folder. Where two exports cover the same month, the newer file is used for that month.</p><div class="scroll"><table id="src-table"></table></div></div>
+    </details>
+    <details class="card">
+      <summary>Lines left out of the INR books, by month</summary>
+      <div class="inner"><div class="scroll"><table id="ex-table"></table></div><div class="scroll"><table id="usd-table"></table></div></div>
+    </details>
+  </section>
+
+  <section data-p="ar" class="block" hidden>
+    <div><p class="eyebrow">Annual reconciliation</p><h1>INR books against the audited accounts</h1>
+      <p class="sub">The opening position is reconciled to the signed FY 2025-26 accounts below. At year end, the 31 March 2027 balance sheet from these books is compared caption by caption with the audited figures.</p></div>
+    <div class="block">
+      <div class="block-head"><h2>Year end 31 March 2027</h2></div>
+      <div id="ye"></div>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2>Opening position, 31 March 2026</h2><p class="hint">INR GL rebuilt from Intacct minus audited, ₹. Debit positive.</p></div>
+      <div class="card scroll"><table class="wide" id="or-table"></table></div>
+    </div>
+  </section>
+
+  <section data-p="ri" class="block" hidden>
+    <div><p class="eyebrow">For the finance team and auditors</p><h1>Review items</h1>
+      <p class="sub">Treatments applied and points that need a decision or a document. Keep <span class="num">data/mappings/review_items_fy2026-27.csv</span> up to date at each month-end.</p></div>
+    <div class="filters" id="ri-filters"></div>
+    <div class="card scroll"><table class="wide" id="ri-table"></table></div>
+  </section>
+</main>
+
+<script>
+(() => {
+const D = /*__DATA__*/null;
+const M = D.months, NM = M.length;
+const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const lab = m => MN[+m.slice(5) - 1];
+const labY = m => `${MN[+m.slice(5) - 1]} ${m.slice(0, 4)}`;
+const monthEnd = m => { const d = new Date(+m.slice(0, 4), +m.slice(5), 0); return `${d.getDate()} ${MN[d.getMonth()]} ${d.getFullYear()}`; };
+
+const fmt = (n, dp = 0) => (n < 0 ? "−" : "") + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+const sgn = n => Math.round(n) === 0 ? "–" : fmt(n);
+const drcr = n => Math.abs(n) < 0.005 ? "–" : fmt(Math.abs(n), Math.abs(n) % 1 ? 2 : 0) + (n > 0 ? " Dr" : " Cr");
+const short = n => { const a = Math.abs(n), s = n < 0 ? "−" : ""; return a >= 1e7 ? `${s}₹${(a / 1e7).toFixed(2)} crore` : `${s}₹${(a / 1e5).toFixed(1)} lakh`; };
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sum = (a, f) => a.reduce((t, x) => t + f(x), 0);
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+document.getElementById("brand-sub").textContent = `Axi Digital India · AUS055 · FY ${D.meta.fy} · ${labY(M[0])} to ${labY(M[NM - 1])}`;
+
+/* period: index of a month, or "ytd" */
+let per = store.get("inr-per"); per = per === "ytd" ? "ytd" : (per !== null && +per < NM ? +per : NM - 1);
+const range = () => per === "ytd" ? [0, NM - 1] : [per, per];
+const perLabel = () => per === "ytd" ? `Year to date (${lab(M[0])}–${lab(M[NM - 1])} ${M[NM - 1].slice(0, 4)})` : labY(M[per]);
+const endIdx = () => per === "ytd" ? NM - 1 : per;
+const pv = (v, [a, b]) => { let t = 0; for (let i = a; i <= b; i++) t += v[i]; return t; };
+
+/* tabs */
+document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("main > section").forEach(s => s.hidden = s.dataset.p !== b.dataset.t);
+  store.set("inr-tab", b.dataset.t);
+}));
+{ const t = store.get("inr-tab"); const b = t && document.querySelector(`#tabs button[data-t="${t}"]`); if (b) b.click(); }
+
+function renderPeriod() {
+  const seg = document.getElementById("period");
+  seg.innerHTML = M.map((m, i) => `<button role="tab" data-i="${i}" aria-selected="${per === i}">${lab(m)}</button>`).join("") + `<button role="tab" data-i="ytd" aria-selected="${per === "ytd"}">Year to date</button>`;
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { per = b.dataset.i === "ytd" ? "ytd" : +b.dataset.i; store.set("inr-per", String(per)); renderAll(); }));
+  const bad = D.checks.filter(c => (per === "ytd" || c.m === M[per]) && c.s === "bad").length;
+  document.getElementById("period-note").textContent = per === "ytd" ? `${NM} months loaded` : `month-end ${monthEnd(M[per])}`;
+}
+
+/* ---------- overview ---------- */
+const plSum = (rows, r) => sum(rows, x => pv(x.v, r));
+const bsAt = (cap, i) => { const b = D.bs.find(x => x.caption === cap); return i < 0 ? b.o : b.v[i]; };
+const SERIES = [
+  { k: "Employees and contractors", c: "var(--s1)", g: ["Employee benefit expenses", "Contractors"] },
+  { k: "Technology and AI tools", c: "var(--s2)", g: ["Technology and AI tools"] },
+  { k: "Professional and compliance", c: "var(--s3)", g: ["Professional and compliance fees"] },
+  { k: "Travel and other", c: "var(--s4)", g: ["Travel and entertainment", "Other expenses", "FX and rounding", "Depreciation and amortisation"] },
+];
+function renderOverview() {
+  const r = range(), e = endIdx(), s = r[0] - 1;
+  const result = plSum(D.pl, r);
+  const capitalised = -plSum(D.pl.filter(x => x.g === "Personnel costs capitalised"), r);
+  const gross = plSum(D.pl.filter(x => x.g !== "Other income" && x.g !== "Personnel costs capitalised"), r);
+  const capIn = bsAt("Share capital", e) - bsAt("Share capital", s);
+  const assets = sum(D.bs.filter(x => x.section === "Assets"), x => x.v[e]), el = sum(D.bs.filter(x => x.section !== "Assets"), x => x.v[e]);
+  const ck = D.checks.filter(c => per === "ytd" ? true : c.m === M[per]);
+  const nb = ck.filter(c => c.s === "bad").length, nw = ck.filter(c => c.s === "warn").length;
+  document.getElementById("ov-eyebrow").textContent = perLabel();
+  document.getElementById("ov-title").textContent = per === "ytd" ? `INR books, FY ${D.meta.fy} to date` : `INR books for ${labY(M[per])}`;
+  document.getElementById("hero").innerHTML = `
+    <div class="figure"><span class="eyebrow">${result >= 0 ? "Loss" : "Profit"} for ${per === "ytd" ? "the year to date" : "the month"}</span><span class="big">${short(Math.abs(result))}</span><span class="dim">before tax · ${short(gross)} spend, ${short(capitalised)} capitalised</span></div>
+    <div class="figure"><span class="eyebrow">Capital received</span><span class="val">${capIn ? short(capIn) : "None"}</span><span class="dim">${per === "ytd" ? "year to date" : "in the month"}</span></div>
+    <div class="end"><span class="chip ${nb ? "bad" : nw ? "warn" : "ok"}">${nb ? `${nb} check${nb > 1 ? "s" : ""} failing` : nw ? `${nw} check${nw > 1 ? "s" : ""} to look at` : "All checks pass"}</span><span class="dim">Balance sheet difference at ${monthEnd(M[e])}: ₹${fmt(Math.round(assets - el))}</span></div>`;
+  const nw2 = i => bsAt("Share capital", i) + bsAt("Reserves and surplus", i);
+  document.getElementById("strip").innerHTML = [
+    [`Cash and FDs, ${monthEnd(M[e])}`, short(bsAt("Cash and cash equivalents", e)), `${short(bsAt("Cash and cash equivalents", e) - bsAt("Cash and cash equivalents", s))} in the period`],
+    ["Asset WIP", short(bsAt("Asset WIP", e)), `${short(bsAt("Asset WIP", e) - bsAt("Asset WIP", s))} in the period`],
+    ["Net worth", short(nw2(e)), "share capital plus reserves"],
+    ["Trade and other payables", short(bsAt("Trade payables", e) + bsAt("Other current liabilities", e)), "at period end"],
+    ["Review items open", String(D.review.filter(x => x.s !== "Explained").length), `of ${D.review.length} listed`],
+  ].map(([k, v, d]) => `<div class="figure"><span class="eyebrow">${k}</span><span class="val">${v}</span><span class="dim">${d}</span></div>`).join("");
+
+  // chart
+  const mv = M.map((m, i) => SERIES.map(se => Math.max(0, sum(D.pl.filter(x => se.g.includes(x.g)), x => x.v[i]))));
+  const tot = mv.map(a => a.reduce((t, x) => t + x, 0));
+  const step = 5e6, yMax = Math.max(step, Math.ceil(Math.max(...tot) / step) * step);
+  const cols = document.getElementById("cols"), xl = document.getElementById("xl");
+  cols.style.gridTemplateColumns = xl.style.gridTemplateColumns = `repeat(${NM}, 1fr)`;
+  document.getElementById("legend").innerHTML = SERIES.map(se => `<span><i class="sw" style="background:${se.c}"></i>${se.k}</span>`).join("");
+  let g = ""; for (let v = 0; v <= yMax; v += step) g += `<div class="grid" style="bottom:${v / yMax * 100}%"><span>${(v / 1e5).toFixed(0)}L</span></div>`;
+  cols.innerHTML = g + M.map((m, i) => `<div class="col${per !== "ytd" && per !== i ? " dimmed" : ""}" data-i="${i}" role="button" tabindex="0" aria-label="${labY(m)}">${mv[i].map((v, j) => v <= 0 ? "" : `<div class="seg-bar" style="height:calc(${v / yMax * 100}% - 2px);background:${SERIES[j].c}"></div>`).join("")}<span class="ctop">${(tot[i] / 1e5).toFixed(1)}L</span></div>`).join("");
+  xl.innerHTML = M.map((m, i) => `<span class="${per === i ? "on" : ""}">${lab(m)}</span>`).join("");
+  let tip = null;
+  cols.querySelectorAll(".col").forEach(c => {
+    const i = +c.dataset.i;
+    c.addEventListener("click", () => { per = i; store.set("inr-per", String(i)); renderAll(); });
+    c.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); c.click(); } });
+    c.addEventListener("mousemove", ev => {
+      if (!tip) { tip = document.createElement("div"); tip.className = "tip"; cols.appendChild(tip); }
+      tip.innerHTML = `<b>${labY(M[i])}</b>` + SERIES.map((se, j) => `<div class="r"><span><i style="background:${se.c}"></i>${se.k}</span><span class="num">${fmt(mv[i][j])}</span></div>`).join("") + `<div class="r" style="margin-top:4px;font-weight:600"><span>Total</span><span class="num">${fmt(tot[i])}</span></div>`;
+      const box = cols.getBoundingClientRect(); let x = ev.clientX - box.left + 14; if (x + 270 > box.width) x = ev.clientX - box.left - 284;
+      tip.style.left = Math.max(0, x) + "px"; tip.style.top = Math.max(0, ev.clientY - box.top - 40) + "px"; tip.hidden = false;
+    });
+    c.addEventListener("mouseleave", () => { if (tip) tip.hidden = true; });
+  });
+
+  document.getElementById("ov-checks-title").textContent = per === "ytd" ? "Checks needing attention, all months" : `Checks for ${labY(M[per])}`;
+  const rows = per === "ytd" ? ck.filter(c => c.s === "bad" || c.s === "warn") : ck;
+  document.getElementById("ov-checks").innerHTML = `<thead><tr>${per === "ytd" ? "<th>Month</th>" : ""}<th>Check</th><th>Result</th><th>Detail</th></tr></thead><tbody>` +
+    (rows.length ? rows.map(c => `<tr class="${c.s === "bad" ? "sev-bad" : c.s === "warn" ? "sev-warn" : ""}">${per === "ytd" ? `<td>${lab(c.m)}</td>` : ""}<td>${esc(c.c)}</td><td>${chip(c.s)}</td><td class="desc">${esc(c.d)}</td></tr>`).join("") : `<tr><td colspan="4" class="dim">Nothing to look at.</td></tr>`) + `</tbody>`;
+}
+const CHIP = { ok: ["ok", "Pass"], warn: ["warn", "Look at"], bad: ["bad", "Fail"], info: ["info", "Info"] };
+const chip = s => `<span class="chip ${CHIP[s][0]}">${CHIP[s][1]}</span>`;
+
+/* ---------- P&L ---------- */
+function renderPL() {
+  const order = ["Employee benefit expenses", "Personnel costs capitalised", "Contractors", "Technology and AI tools", "Professional and compliance fees", "Travel and entertainment", "Depreciation and amortisation", "Other expenses", "FX and rounding"];
+  const quarters = []; for (let i = 0; i < NM; i += 3) quarters.push([i, Math.min(i + 2, NM - 1)]);
+  const cols = [...M.map((m, i) => ({ h: lab(m), r: [i, i], cur: per === i })), ...quarters.map(([a, b]) => ({ h: `Q${a / 3 + 1}`, r: [a, b], q: true })), { h: "YTD", r: [0, NM - 1], cur: per === "ytd" }];
+  const cell = (v, c) => `<td class="n${c.cur ? " cur" : ""}">${sgn(v)}</td>`;
+  const row = (label, vals, cls = "", ind = false) => `<tr class="${cls}"><td class="sticky${ind ? " ind" : ""}">${label}</td>${cols.map(c => cell(pv(vals, c.r), c)).join("")}</tr>`;
+  const add = rows => M.map((_, i) => sum(rows, x => x.v[i]));
+  const neg = v => v.map(x => -x);
+  let b = `<thead><tr><th class="sticky">Line</th>${cols.map(c => `<th class="n${c.cur ? " cur" : ""}">${c.h}</th>`).join("")}</tr></thead><tbody>`;
+  const inc = D.pl.filter(x => x.g === "Other income");
+  b += `<tr class="grp"><td class="sticky" colspan="${cols.length + 1}">Income</td></tr>`;
+  b += row("Other income", neg(add(inc)), "sub");
+  inc.forEach(x => b += row(`<span class="num dim">${x.a}</span> ${esc(x.n)}`, neg(x.v), "muted-row", true));
+  b += `<tr class="grp"><td class="sticky" colspan="${cols.length + 1}">Expenses</td></tr>`;
+  for (const g of order) {
+    const rs = D.pl.filter(x => x.g === g); if (!rs.length) continue;
+    b += row(esc(g), add(rs), "sub");
+    if (rs.length > 1 || rs[0].a !== "600565") rs.forEach(x => b += row(`<span class="num dim">${x.a}</span> ${esc(x.n)}`, x.v, "muted-row", true));
+  }
+  const ex = D.pl.filter(x => x.g !== "Other income");
+  b += row("Total expenses", add(ex), "tot");
+  b += row("Loss (−) / profit before tax", neg(add(D.pl)), "tot");
+  document.getElementById("pl-table").innerHTML = b + "</tbody>";
+}
+
+/* ---------- balance sheet ---------- */
+function renderBS() {
+  const e = endIdx();
+  let b = `<thead><tr><th class="sticky">Caption</th><th>Note</th><th class="n">31 Mar 2026 audited</th>${M.map((m, i) => `<th class="n${i === e ? " cur" : ""}">${monthEnd(m).replace(/ 20/, " ’")}</th>`).join("")}</tr></thead><tbody>`;
+  for (const sec of ["Equity and liabilities", "Assets"]) {
+    const rows = D.bs.filter(x => x.section === sec);
+    b += `<tr class="grp"><td class="sticky" colspan="${NM + 3}">${sec}</td></tr>`;
+    for (const g of [...new Set(rows.map(x => x.group))]) {
+      b += `<tr class="sub"><td class="sticky" colspan="${NM + 3}">${esc(g)}</td></tr>`;
+      rows.filter(x => x.group === g).forEach(x => b += `<tr><td class="sticky ind">${esc(x.caption)}</td><td class="num dim">${esc(x.note)}</td><td class="n">${sgn(x.o)}</td>${x.v.map((v, i) => `<td class="n${i === e ? " cur" : ""}">${sgn(v)}</td>`).join("")}</tr>`);
+    }
+    b += `<tr class="tot"><td class="sticky" colspan="2">Total ${sec.toLowerCase()}</td><td class="n">${fmt(sum(rows, x => x.o))}</td>${M.map((m, i) => `<td class="n">${fmt(sum(rows, x => x.v[i]))}</td>`).join("")}</tr>`;
+  }
+  document.getElementById("bs-table").innerHTML = b + "</tbody>";
+}
+
+/* ---------- trial balance ---------- */
+const tbOn = new Set(["BS", "P&L"]); let selAcct = null;
+function renderTB() {
+  const r = range();
+  document.getElementById("tb-title").textContent = `INR trial balance, ${perLabel()}`;
+  const q = document.getElementById("tb-q").value.trim().toLowerCase();
+  const rows = D.tb.filter(x => tbOn.has(x.t) && (!q || (x.a + " " + x.n).toLowerCase().includes(q))).map(x => {
+    const o = (x.t === "BS" ? x.o : 0) + pv(x.v, [0, r[0] - 1]), m = pv(x.v, r);
+    return { ...x, op: o, mv: m, cl: o + m };
+  }).filter(x => Math.abs(x.op) + Math.abs(x.mv) >= 0.005);
+  const t = k => sum(rows, x => x[k]);
+  const opLab = r[0] === 0 ? "1 Apr (GL)" : `${monthEnd(M[r[0] - 1])}`;
+  document.getElementById("tb-table").innerHTML = `<thead><tr><th>Account</th><th>Name</th><th class="n">${opLab}</th><th class="n">Movement</th><th class="n">${monthEnd(M[r[1]])}</th></tr></thead><tbody>` +
+    rows.map(x => `<tr class="click${x.a === selAcct ? " sel" : ""}" tabindex="0" data-a="${esc(x.a)}"><td class="num">${esc(x.a)}</td><td>${esc(x.n)}</td><td class="n">${drcr(x.op)}</td><td class="n">${drcr(x.mv)}</td><td class="n">${drcr(x.cl)}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><td colspan="2">Net of shown accounts</td><td class="n">${drcr(t("op"))}</td><td class="n">${drcr(t("mv"))}</td><td class="n">${drcr(t("cl"))}</td></tr></tfoot>`;
+  document.querySelectorAll("#tb-table tr.click").forEach(tr => {
+    const go = () => { selAcct = tr.dataset.a; renderTB(); };
+    tr.addEventListener("click", go); tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  renderLines();
+}
+function renderLines() {
+  const blk = document.getElementById("lines-block");
+  if (!selAcct) { blk.hidden = true; return; }
+  const r = range(), ms = new Set(M.slice(r[0], r[1] + 1));
+  const acct = D.tb.find(x => x.a === selAcct);
+  const key = s => s.split("/").reverse().map(p => p.padStart(2, "0")).join("");
+  const ls = D.lines.filter(l => l[2] === selAcct && ms.has(l[0])).sort((x, y) => key(x[1]).localeCompare(key(y[1])));
+  blk.hidden = false;
+  document.getElementById("lines-title").textContent = `${selAcct} ${acct ? acct.n : ""}`;
+  document.getElementById("lines-hint").textContent = `${ls.length.toLocaleString("en-IN")} INR lines, ${perLabel()}`;
+  const shown = ls.slice(0, 400);
+  document.getElementById("lines-table").innerHTML = `<thead><tr><th>Date</th><th>Journal</th><th>Party</th><th>Description</th><th class="n">Amount</th><th>Treatment</th></tr></thead><tbody>` +
+    (shown.length ? shown.map(l => `<tr><td class="num">${esc(l[1])}</td><td>${esc(l[3])}</td><td>${esc(l[4])}</td><td class="desc">${esc(l[5])}</td><td class="n">${drcr(l[6])}</td><td>${l[7] ? `<span class="chip info">${esc(l[7])}</span>` : ""}</td></tr>`).join("") : `<tr><td colspan="6" class="dim">No lines in this period.</td></tr>`) +
+    `</tbody><tfoot><tr><td colspan="4">${ls.length > shown.length ? `First ${shown.length} of ${ls.length} lines shown; total covers all` : "Total"}</td><td class="n">${drcr(sum(ls, l => l[6]))}</td><td></td></tr></tfoot>`;
+}
+document.getElementById("tb-q").addEventListener("input", renderTB);
+document.querySelectorAll('section[data-p="tb"] .toggle').forEach(b => b.addEventListener("click", () => {
+  const f = b.dataset.f; tbOn.has(f) ? tbOn.delete(f) : tbOn.add(f); b.setAttribute("aria-pressed", tbOn.has(f)); renderTB();
+}));
+
+/* ---------- checks ---------- */
+function renderChecks() {
+  const names = [...new Set(D.checks.map(c => c.c))];
+  document.getElementById("ck-count").textContent = D.checks.filter(c => c.s === "bad" || c.s === "warn").length;
+  document.getElementById("ck-table").innerHTML = `<thead><tr><th class="sticky">Check</th>${M.map((m, i) => `<th class="${per === i ? "cur" : ""}" style="text-align:center">${lab(m)}</th>`).join("")}</tr></thead><tbody>` +
+    names.map(n => `<tr><td class="sticky">${esc(n)}</td>${M.map((m, i) => { const c = D.checks.find(x => x.c === n && x.m === m); return `<td class="${per === i ? "cur" : ""}" style="text-align:center" title="${c ? esc(c.d) : ""}">${c ? chip(c.s) : `<span class="dim">–</span>`}</td>`; }).join("")}</tr>`).join("") + `</tbody>`;
+}
+document.getElementById("src-table").innerHTML = `<thead><tr><th>File</th><th class="n">Lines</th><th>Months in file</th><th>Used for</th><th>Saved</th></tr></thead><tbody>` +
+  D.sources.map(s => `<tr><td class="num">${esc(s.f)}</td><td class="n">${s.rows.toLocaleString("en-IN")}</td><td>${esc(s.months.split(" ").map(lab).join(", "))}</td><td>${s.used ? esc(s.used.split(" ").map(lab).join(", ")) : `<span class="chip warn">Superseded</span>`}</td><td class="num dim">${esc(s.mod)}</td></tr>`).join("") + `</tbody>`;
+{
+  const reasons = [...new Set(D.excluded.map(x => x.r))];
+  document.getElementById("ex-table").innerHTML = `<thead><tr><th>Reason</th>${M.map(m => `<th class="n">${lab(m)}</th>`).join("")}<th class="n">Total</th></tr></thead><tbody>` +
+    reasons.map(r => { const v = M.map(m => (D.excluded.find(x => x.r === r && x.m === m) || { n: 0 }).n); return `<tr><td>${esc(r)}</td>${v.map(n => `<td class="n">${n || "–"}</td>`).join("")}<td class="n">${sum(v, n => n)}</td></tr>`; }).join("") + `</tbody>`;
+  document.getElementById("usd-table").innerHTML = `<thead><tr><th>Month</th><th>Account</th><th>USD-denominated entries with substance, not in the INR books</th><th class="n">USD</th></tr></thead><tbody>` +
+    D.usdOnly.map(x => `<tr><td>${lab(x.m)}</td><td class="num">${esc(x.a)}</td><td>${esc(x.n)}</td><td class="n">${fmt(x.usd, 2)}</td></tr>`).join("") + `</tbody>`;
+}
+
+/* ---------- annual rec ---------- */
+{
+  const ye = document.getElementById("ye");
+  if (D.yeRec) {
+    ye.innerHTML = `<div class="card scroll"><table class="wide"><thead><tr><th>Caption</th><th class="n">INR books</th><th class="n">Audited</th><th class="n">Difference</th></tr></thead><tbody>` +
+      D.yeRec.map(x => `<tr class="${Math.abs(x.d) >= 1 ? "sev-bad" : ""}"><td>${esc(x.c)}</td><td class="n">${sgn(x.b)}</td><td class="n">${sgn(x.a)}</td><td class="n">${sgn(x.d)}</td></tr>`).join("") + `</tbody></table></div>`;
+  } else {
+    ye.innerHTML = `<div class="card" style="padding:16px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="chip info">Awaiting audited accounts</span><span class="note">When the FY ${esc(D.meta.fy)} accounts are signed, save the balance sheet as <span class="num">${esc(D.meta.yeFile)}</span> with columns <span class="num">caption,audited_inr</span> (captions as on the Balance sheet tab) and rebuild. Until then, the year-to-date position is on the Balance sheet and Profit and loss tabs.</span></div>`;
+  }
+  const ST = { "Open": "bad", "Explained - to confirm": "warn", "Explained": "ok", "Audit-only entry": "info", "Reconciled": "ok" };
+  const LB = { "Explained - to confirm": "To confirm", "Audit-only entry": "Audit-only" };
+  document.getElementById("or-table").innerHTML = `<thead><tr><th>Line item</th><th class="n">GL (INR)</th><th class="n">Audited</th><th class="n">Difference</th><th>Status</th><th>What we know</th></tr></thead><tbody>` +
+    D.openRec.map(x => `<tr class="${x.d === 0 ? "muted-row" : ST[x.s] === "bad" ? "sev-bad" : ST[x.s] === "warn" ? "sev-warn" : ""}"><td>${esc(x.c)}</td><td class="n">${drcr(x.g)}</td><td class="n">${drcr(x.a)}</td><td class="n">${drcr(x.d)}</td><td><span class="chip ${ST[x.s] || "info"}">${esc(LB[x.s] || x.s)}</span></td><td class="desc">${esc(x.e || "—")}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><td>Net</td><td></td><td></td><td class="n">${drcr(Math.round(sum(D.openRec, x => x.d) * 100) / 100)}</td><td colspan="2"></td></tr></tfoot>`;
+}
+
+/* ---------- review items ---------- */
+const RS = { "Open": ["bad", "sev-bad"], "To adjust": ["bad", "sev-bad"], "To confirm": ["warn", "sev-warn"], "Explained": ["ok", ""] };
+const riOn = new Set(Object.keys(RS));
+document.getElementById("ri-count").textContent = D.review.filter(x => x.s !== "Explained").length;
+function renderRI() {
+  const rows = D.review.filter(x => riOn.has(x.s));
+  document.getElementById("ri-table").innerHTML = `<thead><tr><th>#</th><th>Raised</th><th>Area</th><th>Item</th><th class="n">₹</th><th>Status</th><th>Treatment and next step</th></tr></thead><tbody>` +
+    rows.map(x => `<tr class="${(RS[x.s] || ["info", ""])[1]}"><td class="num">${x.id}</td><td>${x.m ? lab(x.m) : ""}</td><td>${esc(x.area)}</td><td class="desc" style="color:var(--ink)">${esc(x.item)}</td><td class="n">${x.amt ? fmt(x.amt, x.amt % 1 ? 2 : 0) : "–"}</td><td><span class="chip ${(RS[x.s] || ["info"])[0]}">${esc(x.s)}</span></td><td class="desc">${esc(x.t)}</td></tr>`).join("") + `</tbody>`;
+}
+document.getElementById("ri-filters").innerHTML = Object.keys(RS).map(k => `<button type="button" class="toggle" data-k="${k}" aria-pressed="true"><i class="dot" style="background:var(--${RS[k][0]})"></i>${k} · ${D.review.filter(x => x.s === k).length}</button>`).join("");
+document.querySelectorAll("#ri-filters .toggle").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.k; riOn.has(k) ? riOn.delete(k) : riOn.add(k); b.setAttribute("aria-pressed", riOn.has(k)); renderRI();
+}));
+
+function renderAll() { renderPeriod(); renderOverview(); renderPL(); renderBS(); renderTB(); renderChecks(); }
+renderAll(); renderRI();
+})();
+</script>
