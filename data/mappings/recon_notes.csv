@@ -1,0 +1,20 @@
+fs_caption,status,explanation
+P&L - net loss before tax,Explained - to confirm,"Audited loss is higher: MCA fee 7,39,000 expensed by auditors (GL debits equity), est. 2,01,412 of Razorpay float expensed, 40,000 deposit reclassed out of rent"
+Razorpay payroll float / insurance CD (not shown in audited FS),Open,"Account 115100 not in audited BS. Appears split: ~6,08,910 into cash, ~2,01,412 expensed. Confirm with auditors / Razorpay statement"
+MCA fee for authorised capital increase (debited to equity),Explained - to confirm,GL debits 7.39 lakh paid to MCA (via Treta) to equity; audited share capital = shares x 10 so fee was expensed
+Cash and bank balances,Open,"Audited cash higher by 6,08,910; matches Razorpay float portion. Also check 6.25 lakh statutory filing fee audit adj credited to HDFC bank"
+Other debtors (not shown in audited FS),Open,PF damages / admin charges recoverable (Treta) and AWS / Mispras AP adjustments; likely netted against trade payables in audited FS
+Security deposit,Explained,"Urban Vault deposit 39,000 + 1,000 booked to rent in GL; audited shows as security deposit"
+Trade payables excl. Axi Technologies,Open,"GL higher by 67,109; roughly offsets other debtors 71,684 (net 4,575)"
+Annual leave liability (other current liabilities),Open,Small difference; compare March leave provision working with audited
+GST input credit,Open,Small difference; compare GST ledger to GSTR-2B / audit working
+Statutory dues and salary payable,Open,Small difference across WHT / PF-NPS / PT / salary control
+Share capital,Open,"INR received net of 1,44,535 adj vs 91,65,818 shares x 10; check allotment working"
+Prepaid insurance,Open,Rounding on insurance prepayment recon
+Asset WIP,Open,Rounding on capitalisation
+Related party payable - Axi Technologies,Reconciled,Rounding only
+Deferred tax asset,Audit-only entry,Deferred tax booked by auditors only; not in Intacct GL
+Deferred tax credit (P&L),Audit-only entry,Deferred tax booked by auditors only; not in Intacct GL
+Provision for expenses,Reconciled,
+Provision for gratuity,Reconciled,
+IC conversion entries (net nil),Reconciled,

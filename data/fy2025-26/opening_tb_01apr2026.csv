@@ -1,0 +1,16 @@
+﻿note,fs_caption,account,amount_inr_hundreds,amount_inr,dr_cr
+3,Share Capital,"Equity share capital (91,65,818 shares of INR 10)",-916581.80,-91658180.00,Cr
+4,Reserves and Surplus,Surplus in Statement of Profit and Loss,86211.50,8621150.00,Dr
+5,Long-term Provisions,Provision for gratuity - non-current,-4047.61,-404761.00,Cr
+6,Accounts Payable,Trade payables - others,-32087.01,-3208701.00,Cr
+7,Other Current Liabilities,Statutory dues payable,-2245.74,-224574.00,Cr
+7,Other Current Liabilities,Salary payable,-3173.32,-317332.00,Cr
+7,Other Current Liabilities,Other current liabilities,-7048.23,-704823.00,Cr
+8,Short-term Provisions,Provision for expenses,-900.00,-90000.00,Cr
+8,Short-term Provisions,Provision for gratuity - current,-14.90,-1490.00,Cr
+9,Property Plant and Equipment,Asset WIP,518466.24,51846624.00,Dr
+10,Long-term Loans and Advances,Security deposits,400.00,40000.00,Dr
+11,Deferred Tax Asset (Net),Deferred tax asset,20647.19,2064719.00,Dr
+12,Cash and Cash Equivalents,Balances with banks - current accounts,304418.93,30441893.00,Dr
+13,Other Current Assets,Prepaid insurance,25764.05,2576405.00,Dr
+13,Other Current Assets,GST input credit,10190.70,1019070.00,Dr

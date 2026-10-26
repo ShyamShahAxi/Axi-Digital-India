@@ -1,0 +1,625 @@
+<title>Axi Digital INR Recon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: TDS Challan Desk pattern — sticky app bar with section tabs. Overview = financial position
+   (hero, strip, composition, Schedule III balance sheet, P&L). Trial balance and INR GL are extract
+   workspaces. Differences holds the unreconciled items. Axi design system v2 colours. */
+:root{
+  --bg:#fafafa; --surface:#ffffff; --sunk:#f4f4f5; --ink:#09090b; --muted:#71717a; --line:#e4e4e7; --line-strong:#c9c5bf;
+  --brand:#18181b; --brand-ink:#fafafa;
+  --red:#ea1827; --red-ink:#ffffff;
+  --hero:#444c56; --hero-2:#6b737d; --hero-ink:#ffffff; --hero-muted:#eef0f2;
+  --ok:#15803d; --ok-soft:#ecfdf3; --warn:#b45409; --warn-soft:#fffbeb; --bad:#c5101d; --bad-soft:#fff1f2;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#6250d6;
+  --f-display:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#09090b; --surface:#18181b; --sunk:#121214; --ink:#fafafa; --muted:#a1a1aa; --line:#27272a; --line-strong:#3f3f46;
+  --brand:#fafafa; --brand-ink:#18181b;
+  --hero:#23272d; --hero-2:#3a4048; --hero-ink:#fafafa; --hero-muted:#d4d4d8;
+  --ok:#4ade80; --ok-soft:#0f2a1a; --warn:#fbc124; --warn-soft:#2e2208; --bad:#ff6772; --bad-soft:#3a0d10;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#09090b; --surface:#18181b; --sunk:#121214; --ink:#fafafa; --muted:#a1a1aa; --line:#27272a; --line-strong:#3f3f46;
+  --brand:#fafafa; --brand-ink:#18181b;
+  --hero:#23272d; --hero-2:#3a4048; --hero-ink:#fafafa; --hero-muted:#d4d4d8;
+  --ok:#4ade80; --ok-soft:#0f2a1a; --warn:#fbc124; --warn-soft:#2e2208; --bad:#ff6772; --bad-soft:#3a0d10;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#9085e9;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--f-body)}
+h1,h2,p{margin:0}
+h1,h2{font-family:var(--f-display);text-wrap:balance;letter-spacing:-.015em}
+h1{font-size:1.875rem;font-weight:500;line-height:1.15;letter-spacing:-.025em}
+h2{font-size:1.125rem;font-weight:600;line-height:1.3}
+.gut{max-width:1120px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dim{color:var(--muted);font-size:.78rem}
+.note{font-size:.8rem;color:var(--muted);max-width:80ch}
+
+/* App bar */
+.appbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:10;background:var(--surface);border-bottom:1px solid var(--line)}
+.appbar-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding-block:12px 4px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:var(--red);color:var(--red-ink);font:700 .7rem var(--f-display);letter-spacing:.04em}
+.brand-name{font:600 1.05rem/1.15 var(--f-display);letter-spacing:-.01em}
+.brand-sub{font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-end{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:10px 12px 9px;font:500 .85rem var(--f-body);color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--red)}
+.count{font:600 .68rem/1.6 var(--f-mono);border-radius:999px;padding:0 6px;background:var(--warn-soft);color:var(--warn)}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:5px;overflow:hidden;background:var(--surface)}
+.seg button{all:unset;cursor:pointer;padding:6px 14px;font:600 .8rem var(--f-body);color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line-strong)}
+.seg button[aria-selected="true"]{background:var(--brand);color:var(--brand-ink)}
+
+/* Buttons, filters, fields */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 .82rem var(--f-body);border-radius:4px;padding:8px 16px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--red);color:var(--red-ink);border-color:var(--red)}
+.btn.primary:hover{filter:brightness(.92)}
+.btn[disabled]{opacity:.5;cursor:default}
+.toggle{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font:600 .78rem var(--f-body);border-radius:4px;padding:6px 12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted)}
+.toggle:hover{border-color:var(--brand);color:var(--ink)}
+.toggle[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.toggle .dot{width:8px;height:8px;border-radius:50%}
+.link{all:unset;cursor:pointer;color:var(--ink);font-weight:600;font-size:.8rem;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line-strong)}
+.link:hover{text-decoration-color:var(--ink)}
+.btn:focus-visible,.toggle:focus-visible,.seg button:focus-visible,.tabs button:focus-visible,.link:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+input[type=search],select{font:inherit;font-size:.85rem;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
+.controls .grow{flex:1 1 240px}
+.controls .end{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+/* Page structure */
+.wrap{padding-block:28px 72px;display:flex;flex-direction:column;gap:24px}
+.pagehead{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+.pagehead > div{min-width:0}
+.sub{color:var(--muted);font-size:.875rem;max-width:72ch;margin-top:4px}
+.block{display:flex;flex-direction:column;gap:10px;min-width:0}
+.block-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.hint{color:var(--muted);font-size:.8125rem;max-width:76ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.scroll{overflow-x:auto}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:24px}
+
+/* Hero headline */
+.hero{display:flex;flex-wrap:wrap;gap:14px 40px;align-items:flex-end;padding:24px 26px;background:linear-gradient(105deg,var(--hero) 0%,var(--hero-2) 100%);color:var(--hero-ink);border-color:transparent}
+.hero > .figure:first-child{position:relative;padding-left:24px}
+.hero > .figure:first-child::before{content:"";position:absolute;left:0;top:22px;width:14px;height:14px;background:var(--red);clip-path:polygon(0 0,100% 0,0 100%)}
+.hero > .figure:first-child .eyebrow::before{content:"/// ";letter-spacing:.02em}
+.hero .eyebrow,.hero .dim{color:var(--hero-muted)}
+.hero .end{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end;text-align:right}
+.figure{display:flex;flex-direction:column;gap:3px;min-width:0}
+.big{font:500 3rem/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.val{font:500 1.1rem/1.3 var(--f-mono);font-variant-numeric:tabular-nums}
+.figures{display:flex;flex-wrap:wrap;overflow:hidden}
+.figures .figure{flex:1 1 170px;padding:14px 18px;box-shadow:-1px -1px 0 var(--line)}
+
+/* Status chips */
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap;line-height:1.5}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.info{background:var(--sunk);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+button.chip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap;line-height:1.5}
+button.chip.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* Composition bar */
+.comp{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.stack{display:flex;gap:2px;height:22px}
+.stack span{display:block;height:100%;min-width:3px}
+.stack span:first-child{border-radius:4px 0 0 4px}
+.stack span:last-child{border-radius:0 4px 4px 0}
+.comp-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 18px}
+.comp-legend div{display:flex;gap:8px;align-items:baseline;font-size:.8rem}
+.comp-legend .sw{width:10px;height:10px;border-radius:3px;flex:none;transform:translateY(1px)}
+.comp-legend .num{margin-left:auto;color:var(--ink)}
+.comp-row{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center}
+.comp-row .lbl{font-size:.78rem;color:var(--muted)}
+
+/* Tables */
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th{font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+tfoot td{font-weight:600;background:var(--sunk);border-top:1px solid var(--line);border-bottom:none}
+td.desc{max-width:340px;min-width:200px;color:var(--muted)}
+td.code{font-family:var(--f-mono);font-size:.8rem;white-space:nowrap}
+tr.grp td{background:var(--sunk);font-weight:600;font-family:var(--f-display);font-size:.9rem}
+tr.sub td{font-weight:600}
+tr.tot td{font-weight:700;background:var(--sunk)}
+tr.sev-bad td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+tr.sev-warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+tr.muted-row td{color:var(--muted)}
+td.ind{padding-left:30px}
+td.doc{font-family:var(--f-mono);font-size:.78rem;word-break:break-all;min-width:90px;max-width:150px}
+td.desc.wrap{min-width:0;max-width:none}
+/* Tables fit the page; only on a phone do they keep a floor width and scroll inside their card. */
+@media (max-width:640px){ table.wide{min-width:620px} }
+
+/* Differences chart */
+.chart-card{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.8rem;color:var(--muted)}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:6px}
+.chart{display:grid;gap:2px;position:relative}
+.bar-row{display:grid;grid-template-columns:minmax(120px,34%) 1fr;gap:12px;align-items:center;min-height:30px}
+.bar-row .name{font-size:.8rem;color:var(--muted);text-align:right;overflow-wrap:anywhere}
+.track{position:relative;height:30px}
+.track::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-strong)}
+.bar{position:absolute;top:9px;height:12px;min-width:2px}
+.bar.dr{left:50%;background:var(--s1);border-radius:0 4px 4px 0}
+.bar.cr{right:50%;background:var(--s2);border-radius:4px 0 0 4px}
+.bval{position:absolute;top:5px;font:500 .74rem var(--f-mono);color:var(--ink);white-space:nowrap}
+.axis{display:grid;grid-template-columns:minmax(120px,34%) 1fr;gap:12px;font:400 .72rem var(--f-mono);color:var(--muted)}
+.axis .ends{display:flex;justify-content:space-between}
+.hit{position:absolute;inset:0}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.78rem;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:5;min-width:210px}
+.tip b{display:block;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:16px}
+
+details.card > summary{cursor:pointer;padding:13px 18px;font:600 .95rem var(--f-display);display:flex;gap:10px;align-items:center;list-style:none}
+details.card > summary::-webkit-details-marker{display:none}
+details.card > summary::before{content:"";width:0;height:0;border-left:5px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
+details.card[open] > summary::before{transform:rotate(90deg)}
+details.card > summary .dim{font-family:var(--f-body);font-weight:400}
+details.card > .inner{padding:0 0 4px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom, 0px));background:var(--brand);color:var(--brand-ink);padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600;z-index:20}
+
+@media (max-width:560px){ .bar-row,.axis{grid-template-columns:1fr;gap:2px} .bar-row .name{text-align:left} .axis > span:first-child{display:none} .big{font-size:2.3rem} .hero .end{margin-left:0;align-items:flex-start;text-align:left} .comp-row{grid-template-columns:1fr;gap:4px} }
+@media (prefers-reduced-motion:no-preference){ .bar{transition:width .25s ease} }
+</style>
+
+<header class="appbar">
+  <div class="gut appbar-in">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">INR</span>
+      <div style="min-width:0"><p class="brand-name">INR Ledger Desk</p><p class="brand-sub">AXI Digital India Pvt Ltd · AUS055 · FY 2025-26</p></div>
+    </div>
+    <div class="bar-end"><span class="chip info">As at 31 March 2026</span></div>
+  </div>
+  <nav class="gut tabs" role="tablist" aria-label="Sections">
+    <button type="button" role="tab" id="tab-overview" data-tab="overview" aria-controls="p-overview">Overview</button>
+    <button type="button" role="tab" id="tab-tb" data-tab="tb" aria-controls="p-tb">Trial balance</button>
+    <button type="button" role="tab" id="tab-gl" data-tab="gl" aria-controls="p-gl">INR GL</button>
+    <button type="button" role="tab" id="tab-diff" data-tab="diff" aria-controls="p-diff">Differences <span class="count" id="diffCount"></span></button>
+  </nav>
+</header>
+
+<main class="gut wrap">
+
+  <!-- OVERVIEW -->
+  <section class="block" id="p-overview" role="tabpanel" aria-labelledby="tab-overview" style="gap:24px">
+    <div class="pagehead"><div>
+      <p class="eyebrow">Financial position</p>
+      <h1>Axi Digital India at 31 March 2026</h1>
+      <p class="sub">Audited figures from the financial statements signed on 11 August 2026 (Kalantri Surana &amp; Associates), with the INR ledger rebuilt from the Intacct GL alongside. Amounts in rupees.</p>
+    </div></div>
+    <div class="card hero" id="hero"></div>
+    <div class="card figures" id="strip"></div>
+    <div class="block">
+      <div class="block-head"><h2>Where the funds sit</h2><p class="hint">Audited total assets, by balance sheet line.</p></div>
+      <div class="card comp" id="comp"></div>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2>Balance sheet</h2><button class="link" type="button" id="bs-to-diff">See differences</button></div>
+      <div class="card scroll"><table id="bs"></table></div>
+    </div>
+    <div class="cols">
+      <div class="block">
+        <div class="block-head"><h2>Statement of profit and loss</h2><p class="hint">Year ended 31 Mar 2026, audited</p></div>
+        <div class="card"><table id="pl"></table></div>
+      </div>
+      <div class="block">
+        <div class="block-head"><h2>Expense detail</h2><p class="hint">As presented in the audited accounts</p></div>
+        <div class="card"><table id="pl-notes"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRIAL BALANCE -->
+  <section class="block" id="p-tb" role="tabpanel" aria-labelledby="tab-tb" hidden style="gap:24px">
+    <div class="pagehead"><div>
+      <p class="eyebrow">Extract</p>
+      <h1>INR trial balance</h1>
+      <p class="sub">Closing balances at 31 March 2026 from the INR GL. Revaluation, realised FX and AUD capital lines are excluded; capital is the INR received.</p>
+    </div></div>
+    <div class="controls">
+      <div class="field"><label for="tbview-acct">View</label>
+        <div class="seg" role="tablist" aria-label="Trial balance view">
+          <button type="button" role="tab" id="tbview-acct" data-view="acct" aria-selected="true">By GL account</button>
+          <button type="button" role="tab" id="tbview-fs" data-view="fs" aria-selected="false">By balance sheet line</button>
+        </div></div>
+      <div class="end">
+        <button class="btn" type="button" id="dl-tb-fs" data-dl>Download TB by line (CSV)</button>
+        <button class="btn primary" type="button" id="dl-tb-acct" data-dl>Download TB by account (CSV)</button>
+      </div>
+    </div>
+    <div class="card scroll"><table class="wide" id="tb"></table></div>
+    <div class="block">
+      <div class="block-head"><h2>Profit and loss per INR GL</h2><button class="btn" type="button" id="dl-pl" data-dl>Download P&amp;L (CSV)</button></div>
+      <p class="hint">The current P&amp;L position in the ledger, by expense type, before the audit reclassifications listed on the Differences tab.</p>
+      <div class="card figures" id="glpl-strip"></div>
+      <div class="card scroll"><table class="wide" id="glpl"></table></div>
+    </div>
+    <p class="note dl-note" hidden>Downloads aren't available in this view. The same files are in the repo under data/fy2025-26/.</p>
+  </section>
+
+  <!-- INR GL -->
+  <section class="block" id="p-gl" role="tabpanel" aria-labelledby="tab-gl" hidden style="gap:24px">
+    <div class="pagehead"><div>
+      <p class="eyebrow">Extract</p>
+      <h1>INR general ledger</h1>
+      <p class="sub" id="gl-sub"></p>
+    </div></div>
+    <div class="controls">
+      <div class="field"><label for="gl-acct">Account</label><select id="gl-acct"></select></div>
+      <div class="field grow"><label for="gl-q">Search description, document or party</label><input type="search" id="gl-q" placeholder="e.g. Razorpay, Treta, AIN2526"></div>
+      <div class="end">
+        <button class="btn" type="button" id="dl-gl-view" data-dl>Download shown lines (CSV)</button>
+        <button class="btn primary" type="button" id="dl-gl-all" data-dl>Download full INR GL (CSV)</button>
+      </div>
+    </div>
+    <div class="card figures" id="gl-strip"></div>
+    <div class="card scroll"><table class="wide" id="gl"></table></div>
+    <p class="note" id="gl-more"></p>
+    <p class="note dl-note" hidden>Downloads aren't available in this view. The same files are in the repo under data/fy2025-26/.</p>
+  </section>
+
+  <!-- DIFFERENCES -->
+  <section class="block" id="p-diff" role="tabpanel" aria-labelledby="tab-diff" hidden style="gap:24px">
+    <div class="pagehead"><div>
+      <p class="eyebrow">GL reconciliation</p>
+      <h1>INR ledger vs audited accounts</h1>
+      <p class="sub">Every difference between the rebuilt INR TB and the signed accounts, kept as an unreconciled item until it is cleared.</p>
+    </div></div>
+    <div class="card figures" id="diff-strip"></div>
+    <div class="block">
+      <div class="block-head"><h2>Differences by line item</h2><div class="controls" role="group" aria-label="Filter by status" id="chips"></div></div>
+      <div class="card chart-card">
+        <div class="legend">
+          <span><i class="sw" style="background:var(--s1)"></i>GL carries more debit than audited</span>
+          <span><i class="sw" style="background:var(--s2)"></i>GL carries more credit than audited</span>
+        </div>
+        <div class="chart" id="chart"></div>
+        <div class="axis"><span></span><div class="ends" id="axis"></div></div>
+        <p class="note" id="chart-note"></p>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2>Unreconciled items</h2><p class="hint">GL minus audited. Debit positive, credit negative.</p></div>
+      <div class="card scroll"><table class="wide">
+        <thead><tr><th>Line item</th><th class="n">GL (INR)</th><th class="n">Audited</th><th class="n">Difference</th><th>Status</th><th>What we know</th></tr></thead>
+        <tbody id="tbody"></tbody>
+        <tfoot><tr><td>Net of shown items</td><td></td><td></td><td class="n" id="foot"></td><td colspan="2"></td></tr></tfoot>
+      </table></div>
+      <p class="note">Statuses and notes live in data/mappings/recon_notes.csv; rebuild with scripts/build_dashboard.ps1.</p>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const { recon: ROWS, tb: TB, sch3: SCH3, pnl: PNL, lines: LINES, meta: META } = DATA;
+
+/* ---------- formatting ---------- */
+const fmt = (n, dp = 0) => (n < 0 ? "−" : "") + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+const money = n => fmt(n, Math.abs(n % 1) > 0.004 ? 2 : 0);
+const drcr = n => n === 0 ? "0" : money(n) + (n > 0 ? " Dr" : " Cr");
+const crore = n => (n / 1e7).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const lakh = n => (n / 1e5).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const cell = n => n === 0 ? `<span class="dim">–</span>` : money(n);
+
+/* ---------- tabs ---------- */
+const TABS = ["overview", "tb", "gl", "diff"];
+function showTab(t) {
+  if (!TABS.includes(t)) t = "overview";
+  TABS.forEach(x => {
+    document.getElementById("p-" + x).hidden = x !== t;
+    document.getElementById("tab-" + x).setAttribute("aria-selected", x === t);
+  });
+  try { localStorage.setItem("inr-desk-tab", t); } catch (e) {}
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+document.getElementById("bs-to-diff").addEventListener("click", () => showTab("diff"));
+
+/* ---------- account → balance sheet line ---------- */
+const captionOf = {};
+SCH3.forEach(s => s.accounts.forEach(a => { captionOf[a] = s.caption; }));
+const isPL = a => /^[5-6]/.test(a) || a === "410300-OTH";
+const lineOf = a => isPL(a) ? "Reserves and surplus" : (captionOf[a] || (a === "410300-IC" ? "Nil (IC conversion)" : "Unmapped"));
+const glBy = {};
+TB.forEach(r => { const c = lineOf(r.a); glBy[c] = (glBy[c] || 0) + r.b; });
+const sideSign = s => s.section === "Assets" ? 1 : -1;  // present liabilities as positive
+
+/* ---------- overview ---------- */
+function renderOverview() {
+  const v = c => SCH3.find(s => s.caption === c).audited;
+  const equity = v("Share capital") + v("Reserves and surplus");
+  const assets = SCH3.filter(s => s.section === "Assets").reduce((t, s) => t + s.audited, 0);
+  const curA = v("Cash and cash equivalents") + v("Other current assets");
+  const curL = v("Trade payables") + v("Other current liabilities") + v("Short-term provisions");
+  const lossYear = PNL.find(p => p.key === "loss").audited;
+
+  document.getElementById("hero").innerHTML = `
+    <div class="figure"><span class="eyebrow">Shareholders' funds (net worth)</span><span class="big">₹${crore(equity)} crore</span><span class="dim">share capital less the first-year loss</span></div>
+    <div class="figure"><span class="eyebrow">Share capital</span><span class="val">₹${crore(v("Share capital"))} crore</span><span class="dim">91,65,818 shares of ₹10</span></div>
+    <div class="figure"><span class="eyebrow">Accumulated loss</span><span class="val">−₹${lakh(-v("Reserves and surplus"))} lakh</span><span class="dim">reserves and surplus</span></div>
+    <div class="figure"><span class="eyebrow">Cash at bank</span><span class="val">₹${crore(v("Cash and cash equivalents"))} crore</span><span class="dim">HDFC (2 accounts) and Kotak</span></div>
+    <div class="end"><span class="chip ok">Audited · signed 11 Aug 2026</span><span class="dim">No revenue yet</span></div>`;
+
+  document.getElementById("strip").innerHTML = [
+    ["Total assets", "₹" + crore(assets) + " cr"],
+    ["Asset WIP", "₹" + crore(v("Asset WIP")) + " cr"],
+    ["Liabilities", "₹" + lakh(curL + v("Long-term provisions")) + " lakh"],
+    ["Current ratio", (curA / curL).toFixed(2) + "×"],
+    ["Loss for the year", "₹" + lakh(-lossYear) + " lakh"],
+    ["Loss per share", "₹" + META.eps],
+  ].map(([k, x]) => `<div class="figure"><span class="eyebrow">${k}</span><span class="val">${x}</span></div>`).join("");
+
+  // Composition of audited assets
+  const parts = [
+    ["Asset WIP", v("Asset WIP"), "var(--s1)"],
+    ["Cash and cash equivalents", v("Cash and cash equivalents"), "var(--s2)"],
+    ["Other current assets", v("Other current assets"), "var(--s3)"],
+    ["Deferred tax and deposits", v("Deferred tax asset (net)") + v("Long-term loans and advances"), "var(--s4)"],
+  ];
+  const fund = [
+    ["Share capital", v("Share capital"), "var(--s1)"],
+    ["Liabilities and provisions", curL + v("Long-term provisions"), "var(--s2)"],
+  ];
+  const bar = (arr, tot) => arr.map(([n, x, c]) => `<span style="flex:${x / tot};background:${c}" title="${esc(n)}: ₹${fmt(x)}"></span>`).join("");
+  const fundTot = fund.reduce((t, f) => t + f[1], 0);
+  document.getElementById("comp").innerHTML = `
+    <div class="comp-row"><span class="lbl">Assets</span><div class="stack" role="img" aria-label="Asset composition">${bar(parts, assets)}</div></div>
+    <div class="comp-legend">${parts.map(([n, x, c]) => `<div><i class="sw" style="background:${c}"></i>${n}<span class="num">${(x / assets * 100).toFixed(1)}% · ₹${fmt(x)}</span></div>`).join("")}</div>
+    <div class="comp-row"><span class="lbl">Funded by</span><div class="stack" role="img" aria-label="Funding">${bar(fund, fundTot)}</div></div>
+    <div class="comp-legend">${fund.map(([n, x, c]) => `<div><i class="sw" style="background:${c}"></i>${n}<span class="num">₹${fmt(x)}</span></div>`).join("")}<div><span class="dim">Accumulated loss reduces funding by ₹${fmt(-v("Reserves and surplus"))}</span></div></div>`;
+
+  // Balance sheet (Schedule III)
+  let html = `<thead><tr><th>Particulars</th><th class="n">Audited</th><th class="n">Per INR GL</th><th class="n">Difference</th></tr></thead><tbody>`;
+  ["Equity and liabilities", "Assets"].forEach(sec => {
+    html += `<tr class="grp"><td colspan="4">${sec}</td></tr>`;
+    const secRows = SCH3.filter(s => s.section === sec);
+    [...new Set(secRows.map(s => s.group))].forEach(g => {
+      const rows = secRows.filter(s => s.group === g);
+      let ta = 0, tg = 0;
+      rows.forEach(s => {
+        const gl = (glBy[s.caption] || 0) * sideSign(s); const d = Math.round((gl - s.audited) * 100) / 100;
+        ta += s.audited; tg += gl;
+        html += `<tr><td class="ind">${esc(s.caption)}</td><td class="n">${cell(s.audited)}</td><td class="n">${cell(gl)}</td>
+          <td class="n">${Math.abs(d) < 1 ? '<span class="chip ok">Agrees</span>' : `<button class="chip warn" type="button" data-go="diff">${money(d)}</button>`}</td></tr>`;
+      });
+      html += `<tr class="sub"><td>${esc(g)}</td><td class="n">${money(ta)}</td><td class="n">${money(tg)}</td><td></td></tr>`;
+    });
+    const tA = secRows.reduce((t, s) => t + s.audited, 0), tG = secRows.reduce((t, s) => t + (glBy[s.caption] || 0) * sideSign(s), 0);
+    html += `<tr class="tot"><td>Total</td><td class="n">${money(tA)}</td><td class="n">${money(tG)}</td><td></td></tr>`;
+  });
+  document.getElementById("bs").innerHTML = html + "</tbody>";
+
+  // P&L
+  const glLoss = TB.filter(r => isPL(r.a)).reduce((t, r) => t + r.b, 0);
+  document.getElementById("pl").innerHTML = `<thead><tr><th>Particulars</th><th class="n">₹</th></tr></thead><tbody>` +
+    PNL.map(p => `<tr class="${p.style || ""}"><td class="${p.style ? "" : "ind"}">${esc(p.label)}</td><td class="n">${cell(p.audited)}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><td>Loss before tax per INR GL <span class="dim">before audit reclassifications</span></td><td class="n">${money(-glLoss)}</td></tr></tfoot>`;
+  const noteName = { "14": "Employee benefit expenses", "15": "Other expenses" };
+  let nh = `<thead><tr><th>Expense</th><th class="n">₹</th></tr></thead><tbody>`;
+  ["14", "15"].forEach(k => {
+    const items = DATA.plNotes.filter(n => n.note === k);
+    nh += `<tr class="grp"><td>${noteName[k]}</td><td class="n">${money(items.reduce((t, n) => t + n.amount, 0))}</td></tr>`;
+    nh += items.map(n => `<tr><td class="ind">${esc(n.account)}</td><td class="n">${money(n.amount)}</td></tr>`).join("");
+  });
+  document.getElementById("pl-notes").innerHTML = nh + "</tbody>";
+}
+
+/* ---------- P&L per INR GL ---------- */
+const PL_GROUPS = [
+  ["Employee costs", a => /^600(?!565)/.test(a)],
+  ["Personnel costs capitalised to Asset WIP", a => a === "600565"],
+  ["Travel, accommodation and meals", a => /^610/.test(a)],
+  ["Marketing and events", a => /^620/.test(a)],
+  ["Technology and hosting", a => /^630/.test(a)],
+  ["Rent and office", a => /^640/.test(a)],
+  ["Professional, compliance and consultancy", a => /^650/.test(a)],
+  ["Bank charges, GST and penalties", a => /^660/.test(a)],
+  ["Insurance", a => /^680/.test(a)],
+  ["Other", a => true],
+];
+function plGroups() {
+  const accts = TB.filter(r => isPL(r.a) && r.b !== 0);
+  return PL_GROUPS.map(([g, test]) => {
+    const rows = accts.filter(r => test(r.a) && PL_GROUPS.find(([, t]) => t(r.a))[0] === g);
+    return { g, rows, total: rows.reduce((t, r) => t + r.b, 0) };
+  }).filter(x => x.rows.length);
+}
+function renderGLPL() {
+  const groups = plGroups();
+  const total = groups.reduce((t, x) => t + x.total, 0);
+  const gross = groups.filter(x => !x.g.startsWith("Personnel costs capitalised")).reduce((t, x) => t + x.total, 0);
+  const cap = groups.find(x => x.g.startsWith("Personnel costs capitalised"));
+  const audited = -PNL.find(p => p.key === "pbt").audited;
+  document.getElementById("glpl-strip").innerHTML = [
+    ["Costs incurred", "₹" + lakh(gross) + " lakh"],
+    ["Capitalised to WIP", "−₹" + lakh(-(cap ? cap.total : 0)) + " lakh"],
+    ["Loss before tax per GL", "₹" + lakh(total) + " lakh"],
+    ["Audited loss before tax", "₹" + lakh(audited) + " lakh"],
+    ["Difference", "₹" + money(Math.round(total - audited))],
+  ].map(([k, x]) => `<div class="figure"><span class="eyebrow">${k}</span><span class="val">${x}</span></div>`).join("");
+  let h = `<thead><tr><th>Account</th><th>Name</th><th class="n">₹ (expense positive)</th></tr></thead><tbody>`;
+  groups.forEach(x => {
+    h += `<tr class="grp"><td colspan="2">${esc(x.g)}</td><td class="n">${money(x.total)}</td></tr>`;
+    h += x.rows.map(r => `<tr><td class="code ind">${esc(r.a)}</td><td>${esc(r.n)}</td><td class="n">${money(r.b)}</td></tr>`).join("");
+  });
+  document.getElementById("glpl").innerHTML = h + `</tbody><tfoot><tr><td colspan="2">Loss before tax per INR GL</td><td class="n">${money(total)}</td></tr></tfoot>`;
+}
+
+/* ---------- trial balance ---------- */
+let tbView = "acct";
+function tbAcctRows() { return TB.filter(r => r.b !== 0).map(r => ({ ...r, line: lineOf(r.a) })); }
+function tbFsRows() {
+  const out = SCH3.map(s => ({ caption: s.caption, section: s.section, gl: glBy[s.caption] || 0, audited: s.audited * sideSign(s) }));
+  return out;
+}
+function renderTB() {
+  const t = document.getElementById("tb");
+  if (tbView === "acct") {
+    const rows = tbAcctRows();
+    const dr = rows.reduce((s, r) => s + Math.max(r.b, 0), 0), cr = rows.reduce((s, r) => s + Math.max(-r.b, 0), 0);
+    t.innerHTML = `<thead><tr><th>Account</th><th>Name</th><th>Balance sheet line</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td class="code">${esc(r.a)}</td><td>${esc(r.n)}</td><td class="dim">${esc(r.line)}</td><td class="n">${r.b > 0 ? money(r.b) : ""}</td><td class="n">${r.b < 0 ? money(-r.b) : ""}</td></tr>`).join("") +
+      `</tbody><tfoot><tr><td colspan="3">Total · ${rows.length} accounts</td><td class="n">${money(dr)}</td><td class="n">${money(cr)}</td></tr></tfoot>`;
+  } else {
+    const rows = tbFsRows();
+    t.innerHTML = `<thead><tr><th>Balance sheet line</th><th>Side</th><th class="n">INR GL (Dr / Cr)</th><th class="n">Audited (Dr / Cr)</th><th class="n">Difference</th></tr></thead><tbody>` +
+      rows.map(r => { const d = Math.round((r.gl - r.audited) * 100) / 100; return `<tr class="${Math.abs(d) >= 1 ? "sev-warn" : ""}"><td>${esc(r.caption)}</td><td class="dim">${r.section}</td><td class="n">${drcr(r.gl)}</td><td class="n">${drcr(r.audited)}</td><td class="n">${Math.abs(d) < 1 ? "–" : drcr(d)}</td></tr>`; }).join("") +
+      `</tbody><tfoot><tr><td colspan="2">Net (should be nil)</td><td class="n">${drcr(Math.round(rows.reduce((s, r) => s + r.gl, 0)))}</td><td class="n">${drcr(Math.round(rows.reduce((s, r) => s + r.audited, 0)))}</td><td></td></tr></tfoot>`;
+  }
+  document.querySelectorAll("#p-tb .seg button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === tbView));
+}
+document.querySelectorAll("#p-tb .seg button").forEach(b => b.addEventListener("click", () => { tbView = b.dataset.view; renderTB(); }));
+
+/* ---------- INR GL ---------- */
+const GL_COLS = ["posting_date", "account_no", "account_name", "journal", "document", "party", "description", "debit_inr", "credit_inr", "record_no"];
+const nameOf = {}; TB.forEach(r => { nameOf[r.a] = r.n; });
+const glRows = LINES.map(l => ({ date: l[0], a: l[1], j: l[2], doc: l[3], party: l[4], desc: l[5], dr: l[6], cr: l[7], rec: l[8] }));
+const dkey = d => d.split("/").reverse().join("");
+glRows.sort((x, y) => x.a.localeCompare(y.a) || dkey(x.date).localeCompare(dkey(y.date)));
+const SHOW_MAX = 300;
+function glFiltered() {
+  const a = document.getElementById("gl-acct").value, q = document.getElementById("gl-q").value.trim().toLowerCase();
+  return glRows.filter(r => (!a || r.a === a) && (!q || (r.desc + " " + r.doc + " " + r.party + " " + r.rec).toLowerCase().includes(q)));
+}
+function renderGL() {
+  const rows = glFiltered();
+  const dr = rows.reduce((s, r) => s + r.dr, 0), cr = rows.reduce((s, r) => s + r.cr, 0);
+  document.getElementById("gl-strip").innerHTML = [
+    ["Lines shown", rows.length.toLocaleString("en-IN")], ["Debits", "₹" + money(dr)], ["Credits", "₹" + money(cr)], ["Net", drcr(Math.round((dr - cr) * 100) / 100)],
+  ].map(([k, x]) => `<div class="figure"><span class="eyebrow">${k}</span><span class="val">${x}</span></div>`).join("");
+  document.getElementById("gl").innerHTML = `<thead><tr><th>Date</th><th>Account</th><th>Document</th><th>Description</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead><tbody>` +
+    rows.slice(0, SHOW_MAX).map(r => `<tr><td class="code">${esc(r.date)}</td><td class="code" title="${esc(nameOf[r.a] || "")}">${esc(r.a)}</td><td class="doc">${esc(r.doc)}</td>
+      <td class="desc wrap">${esc(r.desc || "—")}${r.party ? ` <span class="dim">· ${esc(r.party)}</span>` : ""} <span class="dim">· ${esc(r.j)}</span></td><td class="n">${r.dr ? money(r.dr) : ""}</td><td class="n">${r.cr ? money(r.cr) : ""}</td></tr>`).join("") + "</tbody>";
+  document.getElementById("gl-more").textContent = rows.length > SHOW_MAX
+    ? `Showing the first ${SHOW_MAX} of ${rows.length.toLocaleString("en-IN")} lines. Pick an account or search to narrow it, or download the lines.` : "";
+}
+function initGL() {
+  const accts = [...new Set(glRows.map(r => r.a))].sort();
+  document.getElementById("gl-acct").innerHTML = `<option value="">All accounts (${accts.length})</option>` + accts.map(a => `<option value="${esc(a)}">${esc(a)} · ${esc(nameOf[a] || "")}</option>`).join("");
+  document.getElementById("gl-sub").textContent = `${glRows.length.toLocaleString("en-IN")} INR journal lines from ${META.glFrom} to ${META.glTo}, taken at their INR amount. ${META.excluded.toLocaleString("en-IN")} USD and AUD lines (revaluations, realised FX, AUD capital) are excluded.`;
+  document.getElementById("gl-acct").addEventListener("change", renderGL);
+  document.getElementById("gl-q").addEventListener("input", renderGL);
+}
+
+/* ---------- differences ---------- */
+const STATUS = [
+  { key: "Open", label: "Open", tone: "bad", row: "sev-bad", id: "open" },
+  { key: "Explained - to confirm", label: "To confirm", tone: "warn", row: "sev-warn", id: "confirm" },
+  { key: "Explained", label: "Explained", tone: "ok", row: "", id: "explained" },
+  { key: "Audit-only entry", label: "Audit-only", tone: "info", row: "muted-row", id: "auditonly" },
+  { key: "Reconciled", label: "Reconciled", tone: "ok", row: "muted-row", id: "reconciled" },
+];
+const TONE = { ok: "var(--ok)", warn: "var(--warn)", bad: "var(--bad)", info: "var(--muted)" };
+const on = new Set(["Open", "Explained - to confirm", "Explained", "Reconciled"]);
+const statusOf = k => STATUS.find(s => s.key === k) || STATUS[0];
+const chip = k => { const s = statusOf(k); return `<span class="chip ${s.tone}">${s.label}</span>`; };
+
+function renderDiffStatic() {
+  const count = k => ROWS.filter(r => r.s === k).length;
+  const live = ROWS.filter(r => r.s !== "Reconciled" && r.s !== "Audit-only entry");
+  const gross = live.reduce((t, r) => t + Math.abs(r.d), 0);
+  const net = Math.round(ROWS.reduce((t, r) => t + r.d, 0));
+  document.getElementById("diffCount").textContent = count("Open") + count("Explained - to confirm") || "";
+  document.getElementById("diff-strip").innerHTML = [
+    ["Gross unreconciled", "₹" + lakh(gross) + " lakh"], ["Open", count("Open")], ["To confirm", count("Explained - to confirm")],
+    ["Explained or reconciled", count("Explained") + count("Reconciled")], ["Net of all differences", "₹" + fmt(net)],
+  ].map(([k, x]) => `<div class="figure"><span class="eyebrow">${k}</span><span class="val">${x}</span></div>`).join("");
+  const box = document.getElementById("chips");
+  box.innerHTML = STATUS.map(s => `<button type="button" class="toggle" id="f-${s.id}" data-k="${s.key}" aria-pressed="${on.has(s.key)}"><i class="dot" style="background:${TONE[s.tone]}"></i>${s.label}</button>`).join("");
+  box.querySelectorAll(".toggle").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.k; on.has(k) ? on.delete(k) : on.add(k); b.setAttribute("aria-pressed", on.has(k)); renderDiff();
+  }));
+}
+function renderDiff() {
+  const rows = ROWS.filter(r => on.has(r.s));
+  const items = rows.filter(r => r.d !== 0).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  const max = Math.max(1, ...items.map(r => Math.abs(r.d)));
+  const chart = document.getElementById("chart");
+  chart.innerHTML = items.map((r, i) => {
+    const pct = Math.abs(r.d) / max * 50, side = r.d > 0 ? "dr" : "cr";
+    const pos = r.d > 0 ? `left:calc(50% + ${pct}% + 6px)` : `right:calc(50% + ${pct}% + 6px)`;
+    return `<div class="bar-row"><div class="name">${esc(r.c)}</div><div class="track"><div class="bar ${side}" style="width:${pct}%"></div><span class="bval" style="${pos}">${fmt(r.d)}</span><div class="hit" data-i="${i}"></div></div></div>`;
+  }).join("") || `<p class="note">No differences for the selected statuses.</p>`;
+  document.getElementById("axis").innerHTML = items.length ? `<span>−${fmt(max)}</span><span>0</span><span>${fmt(max)}</span>` : "";
+  document.getElementById("chart-note").textContent = on.has("Audit-only entry")
+    ? "Bars share one linear scale; items under ₹1,000 show as a 2px sliver with their value labelled."
+    : "Deferred tax (±20,64,719) exists only in the audited accounts and is hidden so the smaller items stay readable. Switch on Audit-only to show it.";
+  let tip = null;
+  chart.querySelectorAll(".hit").forEach(h => {
+    h.addEventListener("mousemove", ev => {
+      const r = items[+h.dataset.i];
+      if (!tip) { tip = document.createElement("div"); tip.className = "tip"; chart.appendChild(tip); }
+      tip.innerHTML = `<b>${esc(r.c)}</b><div class="r"><span>GL</span><span class="num">${drcr(r.g)}</span></div><div class="r"><span>Audited</span><span class="num">${drcr(r.a)}</span></div><div class="r"><span>Difference</span><span class="num">${drcr(r.d)}</span></div><div style="margin-top:6px">${chip(r.s)}</div>`;
+      const box = chart.getBoundingClientRect();
+      let x = ev.clientX - box.left + 14; if (x + 240 > box.width) x = box.width - 240;
+      tip.style.left = Math.max(0, x) + "px"; tip.style.top = (ev.clientY - box.top + 14) + "px"; tip.hidden = false;
+    });
+    h.addEventListener("mouseleave", () => { if (tip) tip.hidden = true; });
+  });
+  document.getElementById("tbody").innerHTML = rows.map(r => `<tr class="${r.d === 0 ? "muted-row" : statusOf(r.s).row}"><td>${esc(r.c)}</td><td class="n">${drcr(r.g)}</td><td class="n">${drcr(r.a)}</td><td class="n">${drcr(r.d)}</td><td>${chip(r.s)}</td><td class="desc">${esc(r.e || "—")}</td></tr>`).join("");
+  document.getElementById("foot").textContent = drcr(Math.round(rows.reduce((t, r) => t + r.d, 0) * 100) / 100);
+}
+
+/* ---------- downloads ---------- */
+const csvCell = v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const toCsv = (head, rows) => [head.join(","), ...rows.map(r => r.map(csvCell).join(","))].join("\r\n");
+const fix2 = n => (Math.round(n * 100) / 100).toFixed(2);
+let downloads = null;
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600); }
+async function save(filename, data) {
+  if (!downloads) return;
+  try { await downloads.save({ filename, data }); toast("Saved " + filename); }
+  catch (e) {
+    if (e && e.code === "declined") return;
+    toast(e && e.code === "rate_limited" ? "A save is already waiting for you to confirm." : "This file couldn't be saved here.");
+  }
+}
+const EXPORTS = {
+  "dl-tb-acct": () => save("AUS055_INR_TB_by_account_31Mar2026.csv", toCsv(["account_no", "account_name", "balance_sheet_line", "debit_inr", "credit_inr"],
+    tbAcctRows().map(r => [r.a, r.n, r.line, r.b > 0 ? fix2(r.b) : "0.00", r.b < 0 ? fix2(-r.b) : "0.00"]))),
+  "dl-tb-fs": () => save("AUS055_INR_TB_by_line_31Mar2026.csv", toCsv(["balance_sheet_line", "side", "inr_gl_dr_positive", "audited_dr_positive", "difference"],
+    tbFsRows().map(r => [r.caption, r.section, fix2(r.gl), fix2(r.audited), fix2(r.gl - r.audited)]))),
+  "dl-pl": () => save("AUS055_INR_PL_per_GL_FY2025-26.csv", toCsv(["group", "account_no", "account_name", "amount_inr_expense_positive"],
+    plGroups().flatMap(x => x.rows.map(r => [x.g, r.a, r.n, fix2(r.b)])))),
+  "dl-gl-all": () => save("AUS055_INR_GL_FY2025-26.csv", toCsv(GL_COLS, glRows.map(r => [r.date, r.a, nameOf[r.a] || "", r.j, r.doc, r.party, r.desc, fix2(r.dr), fix2(r.cr), r.rec]))),
+  "dl-gl-view": () => { const a = document.getElementById("gl-acct").value; save(`AUS055_INR_GL_${a || "filtered"}.csv`, toCsv(GL_COLS, glFiltered().map(r => [r.date, r.a, nameOf[r.a] || "", r.j, r.doc, r.party, r.desc, fix2(r.dr), fix2(r.cr), r.rec]))); },
+};
+Object.keys(EXPORTS).forEach(id => document.getElementById(id).addEventListener("click", EXPORTS[id]));
+document.querySelectorAll("[data-dl]").forEach(b => { b.disabled = true; });
+(async () => {
+  try { downloads = await window.claude?.use?.("downloads"); } catch (e) { downloads = null; }
+  document.querySelectorAll("[data-dl]").forEach(b => { b.disabled = !downloads; b.hidden = !downloads; });
+  document.querySelectorAll(".dl-note").forEach(n => { n.hidden = !!downloads; });
+})();
+
+/* ---------- boot ---------- */
+document.addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (g) showTab(g.dataset.go); });
+renderOverview(); renderTB(); renderGLPL(); initGL(); renderGL(); renderDiffStatic(); renderDiff();
+let start = (location.hash || "").slice(1);
+if (!TABS.includes(start)) { try { start = localStorage.getItem("inr-desk-tab") || "overview"; } catch (e) { start = "overview"; } }
+showTab(start);
+</script>
