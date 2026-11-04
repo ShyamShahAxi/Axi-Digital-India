@@ -3,7 +3,10 @@
 INR books for Axi Digital India Private Limited (Intacct entity AUS055), rebuilt from the
 USD-base group ledger and reconciled to the audited financial statements.
 
+Live dashboard: https://shyamshahaxi.github.io/Axi-Digital-India/ (opens `reports/inr_books_fy2026-27.html`).
+
 ## data/fy2025-26
+
 | File | What it is |
 |---|---|
 | `usd_tb_fy2025-26.csv` | USD trial balance, FY 2025-26 (from Intacct) |
@@ -18,6 +21,7 @@ Audited figures are in ₹00s in the signed accounts; the CSVs carry full rupees
 
 ## FY 2026-27: monthly INR books
 Folder `data/fy2026-27/`:
+
 | Path | What it is |
 |---|---|
 | `gl/` | Intacct GL detail exports (USD base, AUS055). Any file name, any period. If two exports cover the same month, the newer file is used for that month. |
