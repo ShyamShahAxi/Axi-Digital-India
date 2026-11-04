@@ -1,7 +1,7 @@
 {
   "pagesBase": "https://shyamshahaxi.github.io/Axi-Digital-India/reports/",
   "years": [
-    { "fy": "2025-26", "file": "inr_recon_31mar2026.html", "kind": "Year-end recon to audited FS, 31 Mar 2026" },
+    { "fy": "2025-26", "file": "inr_books_fy2025-26.html", "kind": "INR books Oct 2025 to Mar 2026, with the rec to the audited FS" },
     { "fy": "2026-27", "file": "inr_books_fy2026-27.html", "kind": "Monthly INR books" }
   ]
 }

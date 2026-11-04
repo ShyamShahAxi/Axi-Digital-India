@@ -158,7 +158,7 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
       <span class="mark" aria-hidden="true">INR</span>
       <div style="min-width:0"><p class="brand-name">INR Books</p><p class="brand-sub" id="brand-sub"></p></div>
     </div>
-    <div class="bar-end"><div class="fy" hidden><span class="eyebrow">Financial year</span><nav class="seg" id="fy-switch" aria-label="Financial year"></nav></div><span class="chip info">Source: Intacct GL, rolled from signed FS 31 Mar 2026</span></div>
+    <div class="bar-end"><div class="fy" hidden><span class="eyebrow">Financial year</span><nav class="seg" id="fy-switch" aria-label="Financial year"></nav></div><span class="chip info" id="src-chip"></span></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-t="ov" aria-selected="true">Overview</button>
       <button role="tab" data-t="pl" aria-selected="false">Profit and loss</button>
@@ -179,7 +179,7 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
     <div>
       <p class="eyebrow" id="ov-eyebrow"></p>
       <h1 id="ov-title"></h1>
-      <p class="sub">The audited 31 March 2026 balance sheet rolled forward month by month with every INR line from the Intacct GL. Revaluation, realised FX and the AUD side of capital receipts are left out, as agreed with the auditors. Capital received in INR is shown as share capital.</p>
+      <p class="sub" data-text="overview"></p>
     </div>
     <div class="card hero" id="hero"></div>
     <div class="card figures" id="strip"></div>
@@ -197,18 +197,18 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
     <div><p class="eyebrow">Statement of profit and loss</p><h1>Result by month</h1>
       <p class="sub">INR GL movements by account. Personnel costs capitalised to Asset WIP are a deduction from expenses. The selected month is shaded.</p></div>
     <div class="card scroll"><table class="wide" id="pl-table"></table></div>
-    <p class="note">Capitalisation is booked as a month-end entry that reverses on the 1st and is rebooked at a cumulative figure, so single months can swing (April carries the 1 April reversal of the FY26 capitalisation; see review item 3). Quarter and year-to-date columns are the reliable view. No tax is booked during the year.</p>
+    <p class="note" data-text="plNote"></p>
   </section>
 
   <section data-p="bs" class="block" hidden>
     <div><p class="eyebrow">Schedule III</p><h1>Balance sheet at each month-end</h1>
-      <p class="sub">Each caption starts from the signed 31 March 2026 figure and moves by the INR GL lines mapped to it. Reserves move by the result. Deferred tax and the security deposit have no GL account behind them and stay at the audited figure.</p></div>
+      <p class="sub" data-text="bsIntro"></p></div>
     <div class="card scroll"><table class="wide" id="bs-table"></table></div>
   </section>
 
   <section data-p="tb" class="block" hidden>
     <div><p class="eyebrow">Trial balance, GL basis</p><h1 id="tb-title"></h1>
-      <p class="sub">The FY 2025-26 INR GL closing plus the INR movements for the year. It differs from the audited figures only by the auditors' adjustments that are not in Intacct (see Annual rec). Select an account to see its lines for the period.</p></div>
+      <p class="sub" data-text="tbIntro"></p></div>
     <div class="filters">
       <input class="search" id="tb-q" type="search" placeholder="Search account or name" aria-label="Search accounts">
       <button type="button" class="toggle" data-f="BS" aria-pressed="true">Balance sheet</button>
@@ -237,20 +237,20 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
 
   <section data-p="ar" class="block" hidden>
     <div><p class="eyebrow">Annual reconciliation</p><h1>INR books against the audited accounts</h1>
-      <p class="sub">The opening position is reconciled to the signed FY 2025-26 accounts below. At year end, the 31 March 2027 balance sheet from these books is compared caption by caption with the audited figures.</p></div>
+      <p class="sub" data-text="arIntro"></p></div>
     <div class="block">
-      <div class="block-head"><h2>Year end 31 March 2027</h2></div>
+      <div class="block-head"><h2 data-text="yeTitle"></h2></div>
       <div id="ye"></div>
     </div>
-    <div class="block">
-      <div class="block-head"><h2>Opening position, 31 March 2026</h2><p class="hint">INR GL rebuilt from Intacct minus audited, ₹. Debit positive.</p></div>
+    <div class="block" id="or-block">
+      <div class="block-head"><h2 data-text="detailTitle"></h2><p class="hint">INR GL rebuilt from Intacct minus audited, ₹. Debit positive.</p></div>
       <div class="card scroll"><table class="wide" id="or-table"></table></div>
     </div>
   </section>
 
   <section data-p="ri" class="block" hidden>
     <div><p class="eyebrow">For the finance team and auditors</p><h1>Review items</h1>
-      <p class="sub">Treatments applied and points that need a decision or a document. Keep <span class="num">data/mappings/review_items_fy2026-27.csv</span> up to date at each month-end.</p></div>
+      <p class="sub">Treatments applied and points that need a decision or a document. Keep <span class="num" id="ri-file"></span> up to date at each month-end.</p></div>
     <div class="filters" id="ri-filters"></div>
     <div class="card scroll"><table class="wide" id="ri-table"></table></div>
   </section>
@@ -274,9 +274,15 @@ const sum = (a, f) => a.reduce((t, x) => t + f(x), 0);
 const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 
 document.getElementById("brand-sub").textContent = `Axi Digital India · AUS055 · FY ${D.meta.fy} · ${labY(M[0])} to ${labY(M[NM - 1])}`;
+/* wording that differs by year comes from the year's config.json */
+const T = D.meta.text || {};
+document.querySelectorAll("[data-text]").forEach(el => el.textContent = T[el.dataset.text] || "");
+document.getElementById("src-chip").textContent = T.source || "Source: Intacct GL";
+document.getElementById("ri-file").textContent = D.meta.reviewFile;
 
-/* period: index of a month, or "ytd" */
-let per = store.get("inr-per"); per = per === "ytd" ? "ytd" : (per !== null && +per < NM ? +per : NM - 1);
+/* period: index of a month, or "ytd"; remembered per year */
+const PK = `inr-per-${D.meta.fy}`;
+let per = store.get(PK); per = per === "ytd" ? "ytd" : (per !== null && +per < NM ? +per : NM - 1);
 const range = () => per === "ytd" ? [0, NM - 1] : [per, per];
 const perLabel = () => per === "ytd" ? `Year to date (${lab(M[0])}–${lab(M[NM - 1])} ${M[NM - 1].slice(0, 4)})` : labY(M[per]);
 const endIdx = () => per === "ytd" ? NM - 1 : per;
@@ -293,7 +299,7 @@ document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click
 function renderPeriod() {
   const seg = document.getElementById("period");
   seg.innerHTML = M.map((m, i) => `<button role="tab" data-i="${i}" aria-selected="${per === i}">${lab(m)}</button>`).join("") + `<button role="tab" data-i="ytd" aria-selected="${per === "ytd"}">Year to date</button>`;
-  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { per = b.dataset.i === "ytd" ? "ytd" : +b.dataset.i; store.set("inr-per", String(per)); renderAll(); }));
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { per = b.dataset.i === "ytd" ? "ytd" : +b.dataset.i; store.set(PK, String(per)); renderAll(); }));
   const bad = D.checks.filter(c => (per === "ytd" || c.m === M[per]) && c.s === "bad").length;
   document.getElementById("period-note").textContent = per === "ytd" ? `${NM} months loaded` : `month-end ${monthEnd(M[per])}`;
 }
@@ -344,7 +350,7 @@ function renderOverview() {
   let tip = null;
   cols.querySelectorAll(".col").forEach(c => {
     const i = +c.dataset.i;
-    c.addEventListener("click", () => { per = i; store.set("inr-per", String(i)); renderAll(); });
+    c.addEventListener("click", () => { per = i; store.set(PK, String(i)); renderAll(); });
     c.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); c.click(); } });
     c.addEventListener("mousemove", ev => {
       if (!tip) { tip = document.createElement("div"); tip.className = "tip"; cols.appendChild(tip); }
@@ -366,8 +372,10 @@ const chip = s => `<span class="chip ${CHIP[s][0]}">${CHIP[s][1]}</span>`;
 /* ---------- P&L ---------- */
 function renderPL() {
   const order = ["Employee benefit expenses", "Personnel costs capitalised", "Contractors", "Technology and AI tools", "Professional and compliance fees", "Travel and entertainment", "Depreciation and amortisation", "Other expenses", "FX and rounding"];
-  const quarters = []; for (let i = 0; i < NM; i += 3) quarters.push([i, Math.min(i + 2, NM - 1)]);
-  const cols = [...M.map((m, i) => ({ h: lab(m), r: [i, i], cur: per === i })), ...quarters.map(([a, b]) => ({ h: `Q${a / 3 + 1}`, r: [a, b], q: true })), { h: "YTD", r: [0, NM - 1], cur: per === "ytd" }];
+  // financial-year quarters (Apr-Jun = Q1), so a year that starts mid-year still labels them correctly
+  const fq = m => Math.floor((+m.slice(5) + 8) % 12 / 3) + 1;
+  const quarters = []; M.forEach((m, i) => { const q = quarters[quarters.length - 1]; if (q && q.q === fq(m)) q.b = i; else quarters.push({ q: fq(m), a: i, b: i }); });
+  const cols = [...M.map((m, i) => ({ h: lab(m), r: [i, i], cur: per === i })), ...quarters.map(({ q, a, b }) => ({ h: `Q${q}`, r: [a, b], q: true })), { h: "YTD", r: [0, NM - 1], cur: per === "ytd" }];
   const cell = (v, c) => `<td class="n${c.cur ? " cur" : ""}">${sgn(v)}</td>`;
   const row = (label, vals, cls = "", ind = false) => `<tr class="${cls}"><td class="sticky${ind ? " ind" : ""}">${label}</td>${cols.map(c => cell(pv(vals, c.r), c)).join("")}</tr>`;
   const add = rows => M.map((_, i) => sum(rows, x => x.v[i]));
@@ -392,7 +400,7 @@ function renderPL() {
 /* ---------- balance sheet ---------- */
 function renderBS() {
   const e = endIdx();
-  let b = `<thead><tr><th class="sticky">Caption</th><th>Note</th><th class="n">31 Mar 2026 audited</th>${M.map((m, i) => `<th class="n${i === e ? " cur" : ""}">${monthEnd(m).replace(/ 20/, " ’")}</th>`).join("")}</tr></thead><tbody>`;
+  let b = `<thead><tr><th class="sticky">Caption</th><th>Note</th><th class="n">${esc(T.bsOpening || "Opening")}</th>${M.map((m, i) => `<th class="n${i === e ? " cur" : ""}">${monthEnd(m).replace(/ 20/, " ’")}</th>`).join("")}</tr></thead><tbody>`;
   for (const sec of ["Equity and liabilities", "Assets"]) {
     const rows = D.bs.filter(x => x.section === sec);
     b += `<tr class="grp"><td class="sticky" colspan="${NM + 3}">${sec}</td></tr>`;
@@ -416,7 +424,7 @@ function renderTB() {
     return { ...x, op: o, mv: m, cl: o + m };
   }).filter(x => Math.abs(x.op) + Math.abs(x.mv) >= 0.005);
   const t = k => sum(rows, x => x[k]);
-  const opLab = r[0] === 0 ? "1 Apr (GL)" : `${monthEnd(M[r[0] - 1])}`;
+  const opLab = r[0] === 0 ? (T.tbOpening || "Opening") : `${monthEnd(M[r[0] - 1])}`;
   document.getElementById("tb-table").innerHTML = `<thead><tr><th>Account</th><th>Name</th><th class="n">${opLab}</th><th class="n">Movement</th><th class="n">${monthEnd(M[r[1]])}</th></tr></thead><tbody>` +
     rows.map(x => `<tr class="click${x.a === selAcct ? " sel" : ""}" tabindex="0" data-a="${esc(x.a)}"><td class="num">${esc(x.a)}</td><td>${esc(x.n)}</td><td class="n">${drcr(x.op)}</td><td class="n">${drcr(x.mv)}</td><td class="n">${drcr(x.cl)}</td></tr>`).join("") +
     `</tbody><tfoot><tr><td colspan="2">Net of shown accounts</td><td class="n">${drcr(t("op"))}</td><td class="n">${drcr(t("mv"))}</td><td class="n">${drcr(t("cl"))}</td></tr></tfoot>`;
@@ -465,16 +473,21 @@ document.getElementById("src-table").innerHTML = `<thead><tr><th>File</th><th cl
 
 /* ---------- annual rec ---------- */
 {
+  const ST = { "Open": "bad", "Explained - to confirm": "warn", "Explained": "ok", "Audit-only entry": "info", "Reconciled": "ok" };
+  const LB = { "Explained - to confirm": "To confirm", "Audit-only entry": "Audit-only" };
+  const stChip = s => `<span class="chip ${ST[s] || "info"}">${esc(LB[s] || s)}</span>`;
   const ye = document.getElementById("ye");
   if (D.yeRec) {
-    ye.innerHTML = `<div class="card scroll"><table class="wide"><thead><tr><th>Caption</th><th class="n">INR books</th><th class="n">Audited</th><th class="n">Difference</th></tr></thead><tbody>` +
-      D.yeRec.map(x => `<tr class="${Math.abs(x.d) >= 1 ? "sev-bad" : ""}"><td>${esc(x.c)}</td><td class="n">${sgn(x.b)}</td><td class="n">${sgn(x.a)}</td><td class="n">${sgn(x.d)}</td></tr>`).join("") + `</tbody></table></div>`;
+    // status and explanation come from the year's yearEndNotes file, when there is one
+    const notes = D.yeRec.some(x => x.s || x.e);
+    ye.innerHTML = `<div class="card scroll"><table class="wide"><thead><tr><th>Caption</th><th class="n">INR books</th><th class="n">Audited</th><th class="n">Difference</th>${notes ? "<th>Status</th><th>Why</th>" : ""}</tr></thead><tbody>` +
+      D.yeRec.map(x => { const zero = Math.abs(x.d) < 1, k = zero ? "" : x.s ? ST[x.s] : "bad";
+        return `<tr class="${zero ? "muted-row" : k === "bad" ? "sev-bad" : k === "warn" ? "sev-warn" : ""}"><td>${esc(x.c)}</td><td class="n">${sgn(x.b)}</td><td class="n">${sgn(x.a)}</td><td class="n">${sgn(x.d)}</td>${notes ? `<td>${zero ? stChip("Reconciled") : x.s ? stChip(x.s) : ""}</td><td class="desc">${esc(x.e || "—")}</td>` : ""}</tr>`; }).join("") + `</tbody></table></div>`;
   } else {
     ye.innerHTML = `<div class="card" style="padding:16px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="chip info">Awaiting audited accounts</span><span class="note">When the FY ${esc(D.meta.fy)} accounts are signed, save the balance sheet as <span class="num">${esc(D.meta.yeFile)}</span> with columns <span class="num">caption,audited_inr</span> (captions as on the Balance sheet tab) and rebuild. Until then, the year-to-date position is on the Balance sheet and Profit and loss tabs.</span></div>`;
   }
-  const ST = { "Open": "bad", "Explained - to confirm": "warn", "Explained": "ok", "Audit-only entry": "info", "Reconciled": "ok" };
-  const LB = { "Explained - to confirm": "To confirm", "Audit-only entry": "Audit-only" };
-  document.getElementById("or-table").innerHTML = `<thead><tr><th>Line item</th><th class="n">GL (INR)</th><th class="n">Audited</th><th class="n">Difference</th><th>Status</th><th>What we know</th></tr></thead><tbody>` +
+  document.getElementById("or-block").hidden = !D.openRec;
+  if (D.openRec) document.getElementById("or-table").innerHTML = `<thead><tr><th>Line item</th><th class="n">GL (INR)</th><th class="n">Audited</th><th class="n">Difference</th><th>Status</th><th>What we know</th></tr></thead><tbody>` +
     D.openRec.map(x => `<tr class="${x.d === 0 ? "muted-row" : ST[x.s] === "bad" ? "sev-bad" : ST[x.s] === "warn" ? "sev-warn" : ""}"><td>${esc(x.c)}</td><td class="n">${drcr(x.g)}</td><td class="n">${drcr(x.a)}</td><td class="n">${drcr(x.d)}</td><td><span class="chip ${ST[x.s] || "info"}">${esc(LB[x.s] || x.s)}</span></td><td class="desc">${esc(x.e || "—")}</td></tr>`).join("") +
     `</tbody><tfoot><tr><td>Net</td><td></td><td></td><td class="n">${drcr(Math.round(sum(D.openRec, x => x.d) * 100) / 100)}</td><td colspan="2"></td></tr></tfoot>`;
 }

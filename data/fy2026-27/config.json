@@ -11,6 +11,19 @@
   "reviewItems": "data/mappings/review_items_fy2026-27.csv",
   "yearEndAudited": "data/fy2026-27/audited_31mar2027.csv",
 
+  "text": {
+    "source": "Source: Intacct GL, rolled from signed FS 31 Mar 2026",
+    "overview": "The audited 31 March 2026 balance sheet rolled forward month by month with every INR line from the Intacct GL. Revaluation, realised FX and the AUD side of capital receipts are left out, as agreed with the auditors. Capital received in INR is shown as share capital.",
+    "plNote": "Capitalisation is booked as a month-end entry that reverses on the 1st and is rebooked at a cumulative figure, so single months can swing (April carries the 1 April reversal of the FY26 capitalisation; see review item 3). Quarter and year-to-date columns are the reliable view. No tax is booked during the year.",
+    "bsIntro": "Each caption starts from the signed 31 March 2026 figure and moves by the INR GL lines mapped to it. Reserves move by the result. Deferred tax and the security deposit have no GL account behind them and stay at the audited figure.",
+    "bsOpening": "31 Mar 2026 audited",
+    "tbIntro": "The FY 2025-26 INR GL closing plus the INR movements for the year. It differs from the audited figures only by the auditors' adjustments that are not in Intacct (see Annual rec). Select an account to see its lines for the period.",
+    "tbOpening": "1 Apr (GL)",
+    "arIntro": "The opening position is reconciled to the signed FY 2025-26 accounts below. At year end, the 31 March 2027 balance sheet from these books is compared caption by caption with the audited figures.",
+    "yeTitle": "Year end 31 March 2027",
+    "detailTitle": "Opening position, 31 March 2026"
+  },
+
   "capitalPattern": "ADDITIONAL CAPITAL|^INW \\S+ AUD|Capital Injection into Axi Digital India$",
   "fdPattern": "FD BOOKED|SWEEP-IN",
   "bankAccounts": ["100455-IN1", "100555-IN1", "100555-IN2"],

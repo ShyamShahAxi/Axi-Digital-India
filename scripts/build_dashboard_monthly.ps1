@@ -25,13 +25,15 @@ $exRows = Import-Csv "$o\gl_lines_excluded.csv"
 $excluded = $exRows | Group-Object month, reason | ForEach-Object { [ordered]@{ m = $_.Group[0].month; r = $_.Group[0].reason; n = $_.Count } }
 $usdOnly = Import-Csv "$o\usd_only_items.csv" | ForEach-Object { [ordered]@{ m = $_.month; a = $_.account_no; n = $_.account_name; usd = [double]$_.usd } }
 $sources = Import-Csv "$o\source_files.csv" | ForEach-Object { [ordered]@{ f = $_.file; rows = [int]$_.rows; months = $_.months; used = $_.used_for; mod = $_.modified } }
-$openRec = Import-Csv (P $cfg.openingRec) | ForEach-Object { [ordered]@{ c = $_.fs_caption; g = [double]$_.gl_inr; a = [double]$_.audited_inr; d = [double]$_.difference; s = $_.status; e = $_.explanation } }
-$yeRec = if (Test-Path "$o\year_end_rec.csv") { @(Import-Csv "$o\year_end_rec.csv" | ForEach-Object { [ordered]@{ c = $_.caption; b = [double]$_.books_inr; a = [double]$_.audited_inr; d = [double]$_.difference } }) } else { $null }
+# Line-by-line rec shown under the year-end rec: the opening rec (FY27) or the year's own (FY26).
+$recFile = if ($cfg.detailRec) { $cfg.detailRec } else { $cfg.openingRec }
+$openRec = if ($recFile) { @(Import-Csv (P $recFile) | ForEach-Object { [ordered]@{ c = $_.fs_caption; g = [double]$_.gl_inr; a = [double]$_.audited_inr; d = [double]$_.difference; s = $_.status; e = $_.explanation } }) } else { $null }
+$yeRec = if (Test-Path "$o\year_end_rec.csv") { @(Import-Csv "$o\year_end_rec.csv" | ForEach-Object { [ordered]@{ c = $_.caption; b = [double]$_.books_inr; a = [double]$_.audited_inr; d = [double]$_.difference; s = $_.status; e = $_.explanation } }) } else { $null }
 
 $data = [ordered]@{
   months = $months; tb = @($tb); pl = @($pl); bs = @($bs); checks = @($checks); review = @($review); lines = $lines
-  excluded = @($excluded); usdOnly = @($usdOnly); sources = @($sources); openRec = @($openRec); yeRec = $yeRec
-  meta = [ordered]@{ fy = $cfg.fy; entity = $cfg.entity; yeFile = $cfg.yearEndAudited; inrLines = $lines.Count; exLines = $exRows.Count }
+  excluded = @($excluded); usdOnly = @($usdOnly); sources = @($sources); openRec = $openRec; yeRec = $yeRec
+  meta = [ordered]@{ fy = $cfg.fy; entity = $cfg.entity; yeFile = $cfg.yearEndAudited; reviewFile = $cfg.reviewItems; text = $cfg.text; inrLines = $lines.Count; exLines = $exRows.Count }
 }
 $json = $data | ConvertTo-Json -Depth 6 -Compress
 $outFile = P "reports\inr_books_fy$($cfg.fy).html"

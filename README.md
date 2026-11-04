@@ -10,7 +10,10 @@ Live dashboard: https://shyamshahaxi.github.io/Axi-Digital-India/ (opens `report
 | File | What it is |
 |---|---|
 | `usd_tb_fy2025-26.csv` | USD trial balance, FY 2025-26 (from Intacct) |
-| `usd_gl_fy2025-26.csv` | USD GL detail, FY 2025-26 (from Intacct, "055 March 26.csv") |
+| `gl/usd_gl_fy2025-26.csv` | USD GL detail, FY 2025-26 (from Intacct, "055 March 26.csv") |
+| `config.json` | Treatment rules for the monthly build (same layout as FY 2026-27; starts from nil in Oct 2025) |
+| `audited_31mar2026.csv` | Signed balance sheet by caption, for the year-end rec |
+| `out/` | Monthly build outputs, as for FY 2026-27 |
 | `opening_tb_01apr2026.csv` | Audited balance sheet at 31 Mar 2026 = INR opening TB for FY 2026-27 |
 | `pnl_fy2025-26.csv` | Audited P&L FY 2025-26 by note |
 | `inr_tb_from_gl_31mar2026.csv` | INR TB rebuilt from the GL (output of `scripts/build_inr_tb.ps1`) |
@@ -18,6 +21,14 @@ Live dashboard: https://shyamshahaxi.github.io/Axi-Digital-India/ (opens `report
 | `recon_gl_vs_audited_31mar2026.csv` | GL INR vs audited, by FS caption (output of `scripts/reconcile_to_audited.ps1`) |
 
 Audited figures are in ₹00s in the signed accounts; the CSVs carry full rupees.
+
+FY 2025-26 is also built month by month with the same scripts and page as FY 2026-27
+(`reports/inr_books_fy2025-26.html`):
+`.\scripts\build_inr_books.ps1 -Config data\fy2025-26\config.json`, then
+`.\scripts\build_dashboard_monthly.ps1 -Config data\fy2025-26\config.json`. Its Annual rec tab compares
+31 March 2026 with the signed accounts by caption (reasons in `data/mappings/year_end_notes_fy2025-26.csv`),
+then line by line. Review items are in `data/mappings/review_items_fy2025-26.csv`. The years shown in the
+page's financial year switch are listed in `data/mappings/report_years.json`.
 
 ## FY 2026-27: monthly INR books
 Folder `data/fy2026-27/`:

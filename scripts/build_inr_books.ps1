@@ -55,12 +55,14 @@ foreach ($month in $months) {
     }
     $treat = ''
     if ($acct -in '410300', '300100') {
-      if ($desc -match $cfg.capitalPattern -and $amt -lt 0) { $acct = '300100-INR'; $treat = 'Capital receipt to share capital' }
+      # Debits in 410300 that match are reversals or deductions from a receipt, so they go to capital too.
+      if ($desc -match $cfg.capitalPattern -and ($amt -lt 0 -or $acct -eq '410300')) { $acct = '300100-INR'; $treat = 'Capital receipt to share capital' }
       elseif ($r.'Record type' -eq 'AP Realized Multi-currency Gain/Loss' -or $desc -match 'Creditors Control Correction') { $acct = '410300-RND'; $treat = 'Rounding' }
+      elseif ($cfg.icPattern -and $desc -match $cfg.icPattern) { $acct = '410300-IC'; $treat = 'Intercompany conversion (nets to nil)' }
       elseif ($supplierAcct.ContainsKey($r.Supplier)) { $acct = $supplierAcct[$r.Supplier]; $treat = 'USD supplier bill paid in INR' }
       else {
         $rule = $cfg.descriptionRules | Where-Object { $desc -match [regex]::Escape($_.match) } | Select-Object -First 1
-        if ($rule) { $acct = $rule.account; $treat = $rule.treatment }
+        if ($rule) { $acct = $rule.account; $treat = $rule.treatment; if ($rule.name -and -not $names.ContainsKey($acct)) { $names[$acct] = $rule.name } }
         elseif ($acct -eq '410300') { $acct = '410300-OTH'; $treat = 'To review' }
       }
     } elseif ($acct -eq '115100' -and $desc -match $cfg.fdPattern) { $acct = '115100-FD'; $treat = 'HDFC fixed deposit / sweep' }
@@ -80,7 +82,8 @@ foreach ($month in $months) {
 }
 $names['300100-INR'] = 'Share capital received (INR)'; $names['410300-OTH'] = 'INR lines in Currency conversion (to review)'
 $names['410300-RND'] = 'Rounding on INR lines in mixed-currency entries'; $names['115100-FD'] = 'HDFC fixed deposits (sweep)'
-$names['310600-GL'] = 'Reserves and surplus (GL basis, b/f)'
+$names['310600-GL'] = 'Reserves and surplus (GL basis, b/f)'; $names['410300-IC'] = 'Intercompany conversion entries (net nil)'
+foreach ($s in $cfg.usdSuppliers) { if ($s.accountName -and -not $names.ContainsKey($s.account)) { $names[$s.account] = $s.accountName } }
 
 $lines | Select-Object month, posting_date, account_no, gl_account, journal, record_type, document, party, description,
   @{ n = 'debit_inr'; e = { if ($_.amount -gt 0) { $_.amount } else { 0 } } }, @{ n = 'credit_inr'; e = { if ($_.amount -lt 0) { -$_.amount } else { 0 } } }, treatment, record_no |
@@ -90,7 +93,8 @@ $excluded | Export-Csv "$out\gl_lines_excluded.csv" -NoTypeInformation -Encoding
 # --- trial balance by month ------------------------------------------------------------
 $isPL = { param($a) $a -match '^(4|5|6)' -and $a -ne '410300-IC' }
 $open = @{}
-foreach ($r in Import-Csv (P $cfg.openingTb)) {
+# A first year has no opening trial balance (openingTb null).
+foreach ($r in $(if ($cfg.openingTb) { Import-Csv (P $cfg.openingTb) })) {
   if (-not $names.ContainsKey($r.account_no)) { $names[$r.account_no] = $r.account_name }
   if (-not (& $isPL $r.account_no)) { $open[$r.account_no] = [decimal]$r.closing_inr }
 }
@@ -207,8 +211,11 @@ $checks | Export-Csv "$out\checks_by_month.csv" -NoTypeInformation -Encoding $en
 $ye = P $cfg.yearEndAudited
 if (Test-Path $ye) {
   $aud = @{}; foreach ($r in Import-Csv $ye) { $aud[$r.caption] = [decimal]$r.audited_inr }
+  # Optional caption,status,explanation file saying why each caption differs.
+  $note = @{}; if ($cfg.yearEndNotes -and (Test-Path (P $cfg.yearEndNotes))) { foreach ($r in Import-Csv (P $cfg.yearEndNotes)) { $note[$r.caption] = $r } }
   $last = $months[-1]
-  $bs | ForEach-Object { [pscustomobject]@{ caption = $_.caption; books_inr = $_.$last; audited_inr = $aud[$_.caption]; difference = [math]::Round($_.$last - [decimal]$aud[$_.caption], 2) } } |
+  $bs | ForEach-Object { [pscustomobject]@{ caption = $_.caption; books_inr = $_.$last; audited_inr = $aud[$_.caption]; difference = [math]::Round($_.$last - [decimal]$aud[$_.caption], 2)
+    status = $note[$_.caption].status; explanation = $note[$_.caption].explanation } } |
     Export-Csv "$out\year_end_rec.csv" -NoTypeInformation -Encoding $enc
 }
 

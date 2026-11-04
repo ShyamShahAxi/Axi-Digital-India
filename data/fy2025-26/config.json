@@ -1,0 +1,44 @@
+{
+  "fy": "2025-26",
+  "entity": "Axi Digital India Private Limited (AUS055)",
+  "startMonth": "2025-10",
+  "glFolder": "data/fy2025-26/gl",
+  "outFolder": "data/fy2025-26/out",
+  "openingTb": null,
+  "openingRec": null,
+  "openingUsd": { "file": "data/fy2025-26/usd_tb_fy2025-26.csv", "column": "opening_usd_01apr2025" },
+  "schedule3": "data/mappings/schedule3_fy2025-26.csv",
+  "reviewItems": "data/mappings/review_items_fy2025-26.csv",
+  "yearEndAudited": "data/fy2025-26/audited_31mar2026.csv",
+  "yearEndNotes": "data/mappings/year_end_notes_fy2025-26.csv",
+  "detailRec": "data/fy2025-26/recon_gl_vs_audited_31mar2026.csv",
+
+  "text": {
+    "source": "Source: Intacct GL, compared with signed FS 31 Mar 2026",
+    "overview": "Every INR line from the Intacct GL, month by month from the first transactions in October 2025, starting from nil balances. Revaluation, realised FX and the AUD side of capital receipts are left out, as agreed with the auditors. Capital received in INR is shown as share capital. The Annual rec tab compares 31 March 2026 with the signed accounts.",
+    "plNote": "Personnel costs were capitalised to Asset WIP in one entry in March, so October to February carry the full cost and March shows a profit (see review item 3). The year-to-date column is the reliable view. Deferred tax was booked by the auditors only and is not in these books.",
+    "bsIntro": "Each caption starts from nil and moves by the INR GL lines mapped to it. Reserves move by the result. Deferred tax and the security deposit have no GL account behind them, so they appear only in the audited figures (see Annual rec).",
+    "bsOpening": "Opening",
+    "tbIntro": "The INR movements from the Intacct GL, starting from nil. They differ from the audited figures by the auditors' adjustments that are not in Intacct (see Annual rec). Select an account to see its lines for the period.",
+    "tbOpening": "Opening",
+    "arIntro": "The 31 March 2026 balance sheet from these books compared caption by caption with the accounts signed on 11 August 2026, then the line-by-line differences behind them.",
+    "yeTitle": "Year end 31 March 2026",
+    "detailTitle": "Line-by-line differences, 31 March 2026"
+  },
+
+  "capitalPattern": "INW 151125I049903038|INW 031025I049907391|ADDITIONAL CAPITAL|Less money received",
+  "icPattern": "Convert intercompany",
+  "fdPattern": "FD BOOKED|SWEEP-IN",
+  "bankAccounts": ["100445-IN1", "100455-IN1", "100555-IN1", "100555-IN2"],
+
+  "usdSuppliers": [
+    { "supplier": "CLOV003", "account": "630180", "name": "Lovable", "accountName": "AI Subscription & Usage" }
+  ],
+  "descriptionRules": [
+    { "match": "Immaterial payment variance", "account": "410300-RND", "treatment": "Rounding" },
+    { "match": "GL exchange entry", "account": "410300-FX", "name": "Exchange entry keyed in INR", "treatment": "INR exchange entry kept in P&L" }
+  ],
+  "excludeRecords": [
+    { "record": "179535333", "reason": "USD FX difference (USD 11.06) keyed with an INR amount" }
+  ]
+}

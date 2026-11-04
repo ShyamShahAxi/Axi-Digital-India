@@ -1,0 +1,13 @@
+﻿"caption","books_inr","audited_inr","difference","status","explanation"
+"Share capital","90917765","91658180","-740415","Explained - to confirm","MCA fee of 7,39,000 for the authorised capital increase is debited to equity in the GL; the auditors expensed it. The other 1,415 is INR received (net of the 1,44,535 short receipt) against 91,65,818 shares at 10: check the allotment working."
+"Reserves and surplus","-9785932.21","-8621150","-1164782.21","Explained","Audited loss before tax is 8,99,937 higher (MCA fee 7,39,000, about 2,01,412 of the Razorpay float expensed, 40,000 deposit taken out of rent and other small items), less the auditors' deferred tax credit of 20,64,719."
+"Long-term provisions","406251","404761","1490","Explained","Gratuity of 4,06,251 split by the auditors: 4,04,761 non-current, 1,490 current."
+"Trade payables","3275810.38","3208701","67109.38","Open","GL higher by 67,109; roughly offsets other debtors of 71,684 (PF damages recoverable from Treta, AWS and Mispras AP adjustments), which the audited FS appear to net against payables."
+"Other current liabilities","1260669.25","1246729","13940.25","Open","Annual leave 8,841 and statutory dues and salary payable 5,100 (WHT, PF-NPS, PT, salary control) higher in the GL. Compare the March workings with the audit file."
+"Short-term provisions","90000","91490","-1490","Explained","Current portion of gratuity (1,490) shown here by the auditors; provision for expenses 90,000 agrees."
+"Asset WIP","51846351","51846624","-273","Explained","Rounding on the capitalisation."
+"Long-term loans and advances","0","40000","-40000","Explained","Urban Vault security deposit (39,000 + 1,000) booked to rent in the GL; audited shows it as a deposit."
+"Gratuity fund (plan assets)","0","0","0",,
+"Deferred tax asset (net)","0","2064719","-2064719","Audit-only entry","Deferred tax booked by the auditors only; not in Intacct."
+"Cash and cash equivalents","29832983.16","30441893","-608909.84","Open","Audited cash higher by 6,08,910, the part of the Razorpay payroll float the auditors put in cash. Also check the 6.25 lakh statutory filing fee audit adjustment credited to HDFC."
+"Other current assets","4485229.26","3595475","889754.26","Open","Razorpay float 8,10,322 in 115100 (audited: 6,08,910 to cash, about 2,01,412 expensed), other debtors 71,684 (see trade payables), GST input 8,302 higher than audited, prepaid insurance rounding (554)."

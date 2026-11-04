@@ -3,7 +3,7 @@
 # translation artefacts of the USD base (revaluations, realised FX, USD
 # conversions) and are dropped, except where noted below.
 param(
-  [string]$Gl = "$PSScriptRoot\..\data\fy2025-26\usd_gl_fy2025-26.csv",
+  [string]$Gl = "$PSScriptRoot\..\data\fy2025-26\gl\usd_gl_fy2025-26.csv",
   [string]$Out = "$PSScriptRoot\..\data\fy2025-26\inr_tb_from_gl_31mar2026.csv",
   [string]$Lines = "$PSScriptRoot\..\data\fy2025-26\inr_gl_lines_fy2025-26.csv",
   [string]$Excluded = "$PSScriptRoot\..\data\fy2025-26\gl_non_inr_lines_excluded.csv"
