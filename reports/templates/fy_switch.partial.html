@@ -1,0 +1,15 @@
+<script>
+/* Financial year switch: links between the year pages listed in data/mappings/report_years.json. */
+(() => {
+  const Y = /*__YEARS__*/null, el = document.getElementById("fy-switch");
+  if (!Y || !el || Y.years.length < 2) return;
+  // On GitHub Pages or a local copy the pages sit side by side; anywhere else (the Claude artifact) open the Pages copy in a new tab.
+  const local = /\.github\.io$/.test(location.hostname) || location.protocol === "file:";
+  el.innerHTML = Y.years.map(y => {
+    const cur = y.file === Y.current;
+    const href = local ? y.file : Y.pagesBase + y.file;
+    return `<a href="${href}"${cur ? ' aria-current="page"' : ""}${local || cur ? "" : ' target="_blank" rel="noopener"'} title="${y.kind}">${y.fy}</a>`;
+  }).join("");
+  el.parentElement.hidden = false;
+})();
+</script>

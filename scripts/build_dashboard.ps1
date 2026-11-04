@@ -48,5 +48,6 @@ $data = [ordered]@{
 }
 $json = $data | ConvertTo-Json -Depth 6 -Compress
 $html = (Get-Content $Template -Raw -Encoding utf8).Replace('/*__DATA__*/null', $json)
+$html = $html.Replace('<!--__FY_SWITCH__-->', (& "$PSScriptRoot\fy_switch.ps1" -Current (Split-Path $Out -Leaf)))
 [System.IO.File]::WriteAllText((Resolve-Path (Split-Path $Out)).Path + '\' + (Split-Path $Out -Leaf), $html, (New-Object System.Text.UTF8Encoding $false))
 "Wrote $Out ($([math]::Round($html.Length / 1KB)) KB, $($lines.Count) GL lines)"

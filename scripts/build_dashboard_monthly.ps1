@@ -36,5 +36,6 @@ $data = [ordered]@{
 $json = $data | ConvertTo-Json -Depth 6 -Compress
 $outFile = P "reports\inr_books_fy$($cfg.fy).html"
 $html = (Get-Content $Template -Raw -Encoding utf8).Replace('/*__DATA__*/null', $json)
+$html = $html.Replace('<!--__FY_SWITCH__-->', (& "$PSScriptRoot\fy_switch.ps1" -Current (Split-Path $outFile -Leaf)))
 [System.IO.File]::WriteAllText($outFile, $html, (New-Object System.Text.UTF8Encoding $false))
 "Wrote $outFile ($([math]::Round($html.Length / 1KB)) KB; months $($months -join ', '))"
