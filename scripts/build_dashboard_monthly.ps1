@@ -19,7 +19,7 @@ $checks = Import-Csv "$o\checks_by_month.csv" | ForEach-Object { [ordered]@{ m =
 $review = Import-Csv (P $cfg.reviewItems) | ForEach-Object { [ordered]@{ id = [int]$_.id; m = $_.month; area = $_.area; item = $_.item; amt = [double]$_.amount_inr; s = $_.status; t = $_.treatment } }
 $lines = New-Object System.Collections.ArrayList
 foreach ($l in Import-Csv "$o\inr_gl_lines.csv") {
-  [void]$lines.Add(@($l.month, $l.posting_date, $l.account_no, $l.journal, $l.party, $l.description, [math]::Round([double]$l.debit_inr - [double]$l.credit_inr, 2), $l.treatment))
+  [void]$lines.Add(@($l.month, $l.posting_date, $l.account_no, $l.journal, $l.party, $l.description, [math]::Round([double]$l.debit_inr - [double]$l.credit_inr, 2), $l.treatment, $l.gl_account, $l.document, $l.record_no))
 }
 $exRows = Import-Csv "$o\gl_lines_excluded.csv"
 $excluded = $exRows | Group-Object month, reason | ForEach-Object { [ordered]@{ m = $_.Group[0].month; r = $_.Group[0].reason; n = $_.Count } }
@@ -33,7 +33,7 @@ $yeRec = if (Test-Path "$o\year_end_rec.csv") { @(Import-Csv "$o\year_end_rec.cs
 $data = [ordered]@{
   months = $months; tb = @($tb); pl = @($pl); bs = @($bs); checks = @($checks); review = @($review); lines = $lines
   excluded = @($excluded); usdOnly = @($usdOnly); sources = @($sources); openRec = $openRec; yeRec = $yeRec
-  meta = [ordered]@{ fy = $cfg.fy; entity = $cfg.entity; yeFile = $cfg.yearEndAudited; reviewFile = $cfg.reviewItems; text = $cfg.text; inrLines = $lines.Count; exLines = $exRows.Count }
+  meta = [ordered]@{ fy = $cfg.fy; entity = $cfg.entity; yeFile = $cfg.yearEndAudited; reviewFile = $cfg.reviewItems; text = $cfg.text; bridge = $cfg.bridge; inrLines = $lines.Count; exLines = $exRows.Count }
 }
 $json = $data | ConvertTo-Json -Depth 6 -Compress
 $outFile = P "reports\inr_books_fy$($cfg.fy).html"

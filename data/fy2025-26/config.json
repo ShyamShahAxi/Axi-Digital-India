@@ -12,6 +12,7 @@
   "yearEndAudited": "data/fy2025-26/audited_31mar2026.csv",
   "yearEndNotes": "data/mappings/year_end_notes_fy2025-26.csv",
   "detailRec": "data/fy2025-26/recon_gl_vs_audited_31mar2026.csv",
+  "bridge": { "total": "P&L - net loss before tax", "exclude": ["Deferred tax asset", "Deferred tax credit (P&L)"] },
 
   "text": {
     "source": "Source: Intacct GL, compared with signed FS 31 Mar 2026",
@@ -23,7 +24,7 @@
     "tbOpening": "Opening",
     "arIntro": "The 31 March 2026 balance sheet from these books compared caption by caption with the accounts signed on 11 August 2026, then the line-by-line differences behind them.",
     "yeTitle": "Year end 31 March 2026",
-    "detailTitle": "Line-by-line differences, 31 March 2026"
+    "detailTitle": "INR ledger vs audited accounts, 31 March 2026"
   },
 
   "capitalPattern": "INW 151125I049903038|INW 031025I049907391|ADDITIONAL CAPITAL|Less money received",

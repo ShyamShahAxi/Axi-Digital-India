@@ -149,6 +149,27 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
 .tip .r i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
 .cell-chip{display:inline-block;width:100%;text-align:center}
 
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 .82rem var(--f-body);border-radius:4px;padding:7px 14px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--red);color:var(--red-ink);border-color:var(--red)}
+.btn.primary:hover{filter:brightness(.92)}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.dl-bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom, 0px));background:var(--brand);color:var(--brand-ink);padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600;z-index:20}
+/* diverging bars: GL minus audited, debit right, credit left */
+.dv{display:grid;gap:2px;position:relative}
+.dv-row{display:grid;grid-template-columns:minmax(120px,34%) 1fr;gap:12px;align-items:center;min-height:30px}
+.dv-name{font-size:.8rem;color:var(--muted);text-align:right;overflow-wrap:anywhere}
+.dv-track{position:relative;height:30px}
+.dv-track::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-strong)}
+.dv-bar{position:absolute;top:9px;height:12px;min-width:2px}
+.dv-bar.dr{left:50%;background:var(--s1);border-radius:0 4px 4px 0}
+.dv-bar.cr{right:50%;background:var(--s2);border-radius:4px 0 0 4px}
+.dv-val{position:absolute;top:5px;font:500 .74rem var(--f-mono);color:var(--ink);white-space:nowrap}
+.dv-hit{position:absolute;inset:0}
+.dv-axis{display:grid;grid-template-columns:minmax(120px,34%) 1fr;gap:12px;font:400 .72rem var(--f-mono);color:var(--muted)}
+.dv-axis .ends{display:flex;justify-content:space-between}
+@media (max-width:560px){ .dv-row,.dv-axis{grid-template-columns:1fr;gap:2px} .dv-name{text-align:left} .dv-axis > span:first-child{display:none} .dl-bar{margin-left:0} }
 @media (max-width:560px){ .big{font-size:2.3rem} .hero .end{margin-left:0;align-items:flex-start;text-align:left} .cols,.xl{padding-left:40px;gap:4px} .grid{left:40px} .ctop{font-size:.6rem} }
 </style>
 
@@ -213,10 +234,11 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
       <input class="search" id="tb-q" type="search" placeholder="Search account or name" aria-label="Search accounts">
       <button type="button" class="toggle" data-f="BS" aria-pressed="true">Balance sheet</button>
       <button type="button" class="toggle" data-f="P&amp;L" aria-pressed="true">Profit and loss</button>
+      <span class="dl-bar"><button type="button" class="btn" id="dl-tb">Download TB as shown (CSV)</button><button type="button" class="btn primary" id="dl-gl">Download full INR GL (CSV)</button></span>
     </div>
     <div class="card scroll"><table class="wide" id="tb-table"></table></div>
     <div class="block" id="lines-block" hidden>
-      <div class="block-head"><h2 id="lines-title"></h2><p class="hint" id="lines-hint"></p></div>
+      <div class="block-head"><h2 id="lines-title"></h2><span class="dl-bar" style="align-items:baseline"><span class="hint" id="lines-hint"></span><button type="button" class="btn" id="dl-lines">Download these lines (CSV)</button></span></div>
       <div class="card scroll"><table class="wide" id="lines-table"></table></div>
     </div>
   </section>
@@ -244,7 +266,20 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
     </div>
     <div class="block" id="or-block">
       <div class="block-head"><h2 data-text="detailTitle"></h2><p class="hint">INR GL rebuilt from Intacct minus audited, ₹. Debit positive.</p></div>
+      <div class="card figures" id="or-strip"></div>
+      <div class="filters" id="or-filters" role="group" aria-label="Filter by status"></div>
+      <div class="card chart-card">
+        <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>GL carries more debit than audited</span><span><i class="sw" style="background:var(--s2)"></i>GL carries more credit than audited</span></div>
+        <div class="dv" id="or-chart"></div>
+        <div class="dv-axis"><span></span><div class="ends" id="or-axis"></div></div>
+        <p class="note" id="or-note"></p>
+      </div>
       <div class="card scroll"><table class="wide" id="or-table"></table></div>
+    </div>
+    <div class="block" id="br-block" hidden>
+      <div class="block-head"><h2>Profit and loss difference, by balance sheet item</h2><p class="hint">Effect on the audited loss before tax, ₹. Higher audited loss positive.</p></div>
+      <div class="card scroll"><table id="br-table"></table></div>
+      <p class="note">Every difference between the INR ledger and the audited balance sheet goes through the result, so together they make up the difference in the loss before tax. A row shows where a difference sits on the balance sheet, not which P&amp;L line it went to. Deferred tax is left out: it is the auditors' tax entry, below the loss before tax.</p>
     </div>
   </section>
 
@@ -255,6 +290,7 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
     <div class="card scroll"><table class="wide" id="ri-table"></table></div>
   </section>
 </main>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 (() => {
@@ -415,14 +451,17 @@ function renderBS() {
 
 /* ---------- trial balance ---------- */
 const tbOn = new Set(["BS", "P&L"]); let selAcct = null;
-function renderTB() {
-  const r = range();
-  document.getElementById("tb-title").textContent = `INR trial balance, ${perLabel()}`;
-  const q = document.getElementById("tb-q").value.trim().toLowerCase();
-  const rows = D.tb.filter(x => tbOn.has(x.t) && (!q || (x.a + " " + x.n).toLowerCase().includes(q))).map(x => {
+function tbRows() {
+  const r = range(), q = document.getElementById("tb-q").value.trim().toLowerCase();
+  return D.tb.filter(x => tbOn.has(x.t) && (!q || (x.a + " " + x.n).toLowerCase().includes(q))).map(x => {
     const o = (x.t === "BS" ? x.o : 0) + pv(x.v, [0, r[0] - 1]), m = pv(x.v, r);
     return { ...x, op: o, mv: m, cl: o + m };
   }).filter(x => Math.abs(x.op) + Math.abs(x.mv) >= 0.005);
+}
+function renderTB() {
+  const r = range();
+  document.getElementById("tb-title").textContent = `INR trial balance, ${perLabel()}`;
+  const rows = tbRows();
   const t = k => sum(rows, x => x[k]);
   const opLab = r[0] === 0 ? (T.tbOpening || "Opening") : `${monthEnd(M[r[0] - 1])}`;
   document.getElementById("tb-table").innerHTML = `<thead><tr><th>Account</th><th>Name</th><th class="n">${opLab}</th><th class="n">Movement</th><th class="n">${monthEnd(M[r[1]])}</th></tr></thead><tbody>` +
@@ -434,13 +473,17 @@ function renderTB() {
   });
   renderLines();
 }
+const dateKey = s => s.split("/").reverse().map(p => p.padStart(2, "0")).join("");
+const byDate = (x, y) => dateKey(x[1]).localeCompare(dateKey(y[1]));
+function acctLines() {
+  const r = range(), ms = new Set(M.slice(r[0], r[1] + 1));
+  return D.lines.filter(l => l[2] === selAcct && ms.has(l[0])).sort(byDate);
+}
 function renderLines() {
   const blk = document.getElementById("lines-block");
   if (!selAcct) { blk.hidden = true; return; }
-  const r = range(), ms = new Set(M.slice(r[0], r[1] + 1));
   const acct = D.tb.find(x => x.a === selAcct);
-  const key = s => s.split("/").reverse().map(p => p.padStart(2, "0")).join("");
-  const ls = D.lines.filter(l => l[2] === selAcct && ms.has(l[0])).sort((x, y) => key(x[1]).localeCompare(key(y[1])));
+  const ls = acctLines();
   blk.hidden = false;
   document.getElementById("lines-title").textContent = `${selAcct} ${acct ? acct.n : ""}`;
   document.getElementById("lines-hint").textContent = `${ls.length.toLocaleString("en-IN")} INR lines, ${perLabel()}`;
@@ -453,6 +496,43 @@ document.getElementById("tb-q").addEventListener("input", renderTB);
 document.querySelectorAll('section[data-p="tb"] .toggle').forEach(b => b.addEventListener("click", () => {
   const f = b.dataset.f; tbOn.has(f) ? tbOn.delete(f) : tbOn.add(f); b.setAttribute("aria-pressed", tbOn.has(f)); renderTB();
 }));
+
+/* ---------- downloads ---------- */
+// In the Claude artifact files go through the downloads capability (the viewer confirms each save);
+// on GitHub Pages or a local copy they are ordinary browser downloads.
+const inClaude = !!(window.claude && window.claude.use);
+const dlReady = inClaude ? Promise.resolve().then(() => window.claude.use("downloads")).catch(() => null) : Promise.resolve(null);
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600); }
+async function saveCsv(filename, csv) {
+  const data = "﻿" + csv;   // BOM so Excel reads ₹ and names as UTF-8
+  if (inClaude) {
+    const dl = await dlReady;
+    if (!dl) { toast("Downloads aren't available in this view."); return; }
+    try { await dl.save({ filename, data }); toast("Saved " + filename); }
+    catch (e) { if (e && e.code === "declined") return; toast(e && e.code === "rate_limited" ? "A save is already waiting for you to confirm." : "This file couldn't be saved here."); }
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([data], { type: "text/csv;charset=utf-8" })); a.download = filename;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+const csvCell = v => { const s = String(v ?? ""); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const toCsv = (head, rows) => [head.join(","), ...rows.map(r => r.map(csvCell).join(","))].join("\r\n");
+const f2 = n => (Math.round(n * 100) / 100).toFixed(2);
+const nameOf = Object.fromEntries(D.tb.map(x => [x.a, x.n]));
+const perFile = () => per === "ytd" ? `FY${D.meta.fy}` : M[per];
+const GL_HEAD = ["month", "posting_date", "account_no", "account_name", "gl_account", "journal", "document", "party", "description", "debit_inr", "credit_inr", "treatment", "record_no"];
+const glRow = l => [l[0], l[1], l[2], nameOf[l[2]] || "", l[8], l[3], l[9], l[4], l[5], l[6] > 0 ? f2(l[6]) : "0.00", l[6] < 0 ? f2(-l[6]) : "0.00", l[7], l[10]];
+document.getElementById("dl-gl").addEventListener("click", () =>
+  saveCsv(`AUS055_INR_GL_FY${D.meta.fy}.csv`, toCsv(GL_HEAD, [...D.lines].sort((x, y) => x[0].localeCompare(y[0]) || byDate(x, y)).map(glRow))));
+document.getElementById("dl-lines").addEventListener("click", () =>
+  saveCsv(`AUS055_INR_GL_${selAcct}_${perFile()}.csv`, toCsv(GL_HEAD, acctLines().map(glRow))));
+document.getElementById("dl-tb").addEventListener("click", () => {
+  const r = range();
+  saveCsv(`AUS055_INR_TB_${perFile()}.csv`, toCsv(["account_no", "account_name", "type", `opening_${r[0] === 0 ? "year" : M[r[0] - 1]}_dr_positive`, "movement_dr_positive", `closing_${M[r[1]]}_dr_positive`],
+    tbRows().map(x => [x.a, x.n, x.t, f2(x.op), f2(x.mv), f2(x.cl)])));
+});
+dlReady.then(dl => { if (inClaude && !dl) document.querySelectorAll(".dl-bar .btn").forEach(b => b.hidden = true); });
 
 /* ---------- checks ---------- */
 function renderChecks() {
@@ -487,9 +567,65 @@ document.getElementById("src-table").innerHTML = `<thead><tr><th>File</th><th cl
     ye.innerHTML = `<div class="card" style="padding:16px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="chip info">Awaiting audited accounts</span><span class="note">When the FY ${esc(D.meta.fy)} accounts are signed, save the balance sheet as <span class="num">${esc(D.meta.yeFile)}</span> with columns <span class="num">caption,audited_inr</span> (captions as on the Balance sheet tab) and rebuild. Until then, the year-to-date position is on the Balance sheet and Profit and loss tabs.</span></div>`;
   }
   document.getElementById("or-block").hidden = !D.openRec;
-  if (D.openRec) document.getElementById("or-table").innerHTML = `<thead><tr><th>Line item</th><th class="n">GL (INR)</th><th class="n">Audited</th><th class="n">Difference</th><th>Status</th><th>What we know</th></tr></thead><tbody>` +
-    D.openRec.map(x => `<tr class="${x.d === 0 ? "muted-row" : ST[x.s] === "bad" ? "sev-bad" : ST[x.s] === "warn" ? "sev-warn" : ""}"><td>${esc(x.c)}</td><td class="n">${drcr(x.g)}</td><td class="n">${drcr(x.a)}</td><td class="n">${drcr(x.d)}</td><td><span class="chip ${ST[x.s] || "info"}">${esc(LB[x.s] || x.s)}</span></td><td class="desc">${esc(x.e || "—")}</td></tr>`).join("") +
-    `</tbody><tfoot><tr><td>Net</td><td></td><td></td><td class="n">${drcr(Math.round(sum(D.openRec, x => x.d) * 100) / 100)}</td><td colspan="2"></td></tr></tfoot>`;
+  const R = D.openRec || [];
+  const rowCls = x => Math.abs(x.d) < 0.005 ? "muted-row" : ST[x.s] === "bad" ? "sev-bad" : ST[x.s] === "warn" ? "sev-warn" : "";
+  // ledger vs audited: summary, status filter, diverging chart and table (audit-only hidden at first so it doesn't swamp the rest)
+  const ORDER = ["Open", "Explained - to confirm", "Explained", "Audit-only entry", "Reconciled"];
+  const orOn = new Set(ORDER.filter(s => s !== "Audit-only entry"));
+  const cnt = s => R.filter(x => x.s === s).length;
+  const live = R.filter(x => x.s !== "Reconciled" && x.s !== "Audit-only entry");
+  document.getElementById("or-strip").innerHTML = [
+    ["Gross unreconciled", short(sum(live, x => Math.abs(x.d))), "excluding audit-only and reconciled"], ["Open", String(cnt("Open")), "need a document or a decision"],
+    ["To confirm", String(cnt("Explained - to confirm")), "explained, awaiting confirmation"], ["Explained or reconciled", String(cnt("Explained") + cnt("Reconciled")), `of ${R.length} lines`],
+    ["Net of all differences", `₹${fmt(Math.round(sum(R, x => x.d)))}`, "should be nil"],
+  ].map(([k, v, d]) => `<div class="figure"><span class="eyebrow">${k}</span><span class="val">${v}</span><span class="dim">${d}</span></div>`).join("");
+  const fb = document.getElementById("or-filters");
+  fb.innerHTML = ORDER.filter(cnt).map(s => `<button type="button" class="toggle" data-k="${esc(s)}" aria-pressed="${orOn.has(s)}"><i class="dot" style="background:var(--${{ bad: "bad", warn: "warn", ok: "ok", info: "muted" }[ST[s]]})"></i>${esc(LB[s] || s)} · ${cnt(s)}</button>`).join("");
+  fb.querySelectorAll(".toggle").forEach(b => b.addEventListener("click", () => { const k = b.dataset.k; orOn.has(k) ? orOn.delete(k) : orOn.add(k); b.setAttribute("aria-pressed", orOn.has(k)); renderOR(); }));
+  function renderOR() {
+    const rows = R.filter(x => orOn.has(x.s));
+    // the P&L total is the sum of the balance sheet rows (see the bridge below), so it stays out of the chart
+    const items = rows.filter(x => Math.abs(x.d) >= 0.005 && x.c !== (D.meta.bridge || {}).total).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+    const max = Math.max(1, ...items.map(x => Math.abs(x.d)));
+    const chart = document.getElementById("or-chart");
+    chart.innerHTML = items.map((x, i) => {
+      const pct = Math.abs(x.d) / max * 40, pos = x.d > 0 ? `left:calc(50% + ${pct}% + 6px)` : `right:calc(50% + ${pct}% + 6px)`;
+      return `<div class="dv-row"><div class="dv-name">${esc(x.c)}</div><div class="dv-track"><div class="dv-bar ${x.d > 0 ? "dr" : "cr"}" style="width:${pct}%"></div><span class="dv-val" style="${pos}">${fmt(x.d, Math.abs(x.d) < 1 ? 2 : 0)}</span><div class="dv-hit" data-i="${i}"></div></div></div>`;
+    }).join("") || `<p class="note">No differences for the selected statuses.</p>`;
+    document.getElementById("or-axis").innerHTML = items.length ? `<span>Credit</span><span>0</span><span>Debit</span>` : "";
+    document.getElementById("or-note").textContent = orOn.has("Audit-only entry") || !cnt("Audit-only entry")
+      ? "Bars share one scale; small items show as a sliver with their value labelled."
+      : "Audit-only entries (deferred tax) are hidden so the smaller items stay readable. Switch on Audit-only to show them.";
+    if ((D.meta.bridge || {}).total) document.getElementById("or-note").textContent += " The loss before tax is in the table and the bridge below, not the chart.";
+    let tip = null;
+    chart.querySelectorAll(".dv-hit").forEach(h => {
+      h.addEventListener("mousemove", ev => {
+        const x = items[+h.dataset.i];
+        if (!tip) { tip = document.createElement("div"); tip.className = "tip"; chart.appendChild(tip); }
+        tip.innerHTML = `<b>${esc(x.c)}</b><div class="r"><span>GL</span><span class="num">${drcr(x.g)}</span></div><div class="r"><span>Audited</span><span class="num">${drcr(x.a)}</span></div><div class="r"><span>Difference</span><span class="num">${drcr(x.d)}</span></div><div style="margin-top:6px">${stChip(x.s)}</div>`;
+        const box = chart.getBoundingClientRect(); let l = ev.clientX - box.left + 14; if (l + 250 > box.width) l = box.width - 250;
+        tip.style.left = Math.max(0, l) + "px"; tip.style.top = (ev.clientY - box.top + 14) + "px"; tip.hidden = false;
+      });
+      h.addEventListener("mouseleave", () => { if (tip) tip.hidden = true; });
+    });
+    document.getElementById("or-table").innerHTML = `<thead><tr><th>Line item</th><th class="n">GL (INR)</th><th class="n">Audited</th><th class="n">Difference</th><th>Status</th><th>What we know</th></tr></thead><tbody>` +
+      rows.map(x => `<tr class="${rowCls(x)}"><td>${esc(x.c)}</td><td class="n">${drcr(x.g)}</td><td class="n">${drcr(x.a)}</td><td class="n">${drcr(x.d)}</td><td>${stChip(x.s)}</td><td class="desc">${esc(x.e || "—")}</td></tr>`).join("") +
+      `</tbody><tfoot><tr><td>Net of shown lines</td><td></td><td></td><td class="n">${drcr(Math.round(sum(rows, x => x.d) * 100) / 100)}</td><td colspan="2"></td></tr></tfoot>`;
+  }
+  if (D.openRec) renderOR();
+
+  // P&L bridge: every balance sheet difference (Dr positive) raises the audited loss by the same amount
+  const B = D.meta.bridge, tot = B && R.find(x => x.c === B.total);
+  document.getElementById("br-block").hidden = !tot;
+  if (tot) {
+    const items = R.filter(x => x.c !== B.total && !B.exclude.includes(x.c) && Math.abs(x.d) >= 0.005).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+    const s = sum(items, x => x.d), target = -tot.d, f = n => fmt(n, 2);
+    document.getElementById("br-table").innerHTML = `<thead><tr><th>Balance sheet item</th><th>Status</th><th class="n">Effect on audited loss</th></tr></thead><tbody>` +
+      items.map(x => `<tr class="${rowCls(x)}"><td>${esc(x.c)}</td><td>${stChip(x.s)}</td><td class="n">${f(x.d)}</td></tr>`).join("") +
+      `</tbody><tfoot><tr><td colspan="2">Total of balance sheet differences</td><td class="n">${f(s)}</td></tr>` +
+      `<tr><td colspan="2">Audited loss before tax less INR ledger loss (${esc(tot.c)})</td><td class="n">${f(target)}</td></tr>` +
+      `<tr><td colspan="2">Not explained</td><td class="n">${f(Math.round((target - s) * 100) / 100)}</td></tr></tfoot>`;
+  }
 }
 
 /* ---------- review items ---------- */
