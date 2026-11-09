@@ -155,6 +155,35 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
 .btn.primary:hover{filter:brightness(.92)}
 .btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .dl-bar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+dialog.upd{border:1px solid var(--line);border-radius:8px;padding:0;width:min(580px,calc(100vw - 32px));max-height:calc(100dvh - 32px);background:var(--surface);color:var(--ink);box-shadow:0 16px 48px rgba(9,9,11,.22)}
+dialog.upd::backdrop{background:rgba(9,9,11,.5)}
+.upd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+.upd-head h2{margin-top:2px}
+.upd-body{padding:16px 20px 20px;display:grid;gap:14px;font-size:.875rem}
+.upd-body ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.upd-body label.field{display:grid;gap:6px;font-weight:600;font-size:.82rem}
+.upd-body input[type=password]{font:400 .85rem var(--f-mono);padding:8px 10px;border:1px solid var(--line-strong);border-radius:4px;background:var(--surface);color:var(--ink);width:100%;box-sizing:border-box}
+.upd-body input[type=password]:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.upd-body .check{display:flex;gap:8px;align-items:center;font-size:.82rem}
+.upd-body .drop{display:grid;place-items:center;gap:6px;padding:22px 16px;border:1px dashed var(--line-strong);border-radius:6px;background:var(--sunk);text-align:center;cursor:pointer}
+.upd-body .drop:hover,.upd-body .drop.over{border-color:var(--brand)}
+.upd-body .drop input{position:absolute;width:1px;height:1px;opacity:0}
+.upd-body .drop:focus-within{outline:2px solid var(--brand);outline-offset:2px}
+.upd-body .facts{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
+.upd-body .facts dt{color:var(--muted);font-size:.8rem}
+.upd-body .facts dd{margin:0}
+.upd-body .msg{padding:10px 12px;border-radius:6px;font-size:.82rem}
+.upd-body .msg.bad{background:var(--bad-soft);color:var(--bad)}
+.upd-body .msg.warn{background:var(--warn-soft);color:var(--warn)}
+.upd-body .steps{list-style:none;padding:0;display:grid;gap:10px}
+.upd-body .steps li{display:flex;gap:10px;align-items:center}
+.upd-body .steps .chip{min-width:64px;justify-content:center}
+.upd-body .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.upd-body .actions .linkish{margin-right:auto}
+.linkish{all:unset;cursor:pointer;color:var(--muted);font-size:.78rem;text-decoration:underline;text-underline-offset:2px}
+.linkish:hover{color:var(--ink)}
+.linkish:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.upd-body a{color:inherit;text-underline-offset:2px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom, 0px));background:var(--brand);color:var(--brand-ink);padding:8px 14px;border-radius:6px;font-size:.82rem;font-weight:600;z-index:20}
 /* diverging bars: GL minus audited, debit right, credit left */
 .dv{display:grid;gap:2px;position:relative}
@@ -179,7 +208,7 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
       <span class="mark" aria-hidden="true">INR</span>
       <div style="min-width:0"><p class="brand-name">INR Books</p><p class="brand-sub" id="brand-sub"></p></div>
     </div>
-    <div class="bar-end"><div class="fy" hidden><span class="eyebrow">Financial year</span><nav class="seg" id="fy-switch" aria-label="Financial year"></nav></div><span class="chip info" id="src-chip"></span></div>
+    <div class="bar-end"><div class="fy" hidden><span class="eyebrow">Financial year</span><nav class="seg" id="fy-switch" aria-label="Financial year"></nav></div><span class="chip info" id="src-chip"></span><button type="button" class="btn primary" id="upd-open" hidden>Update the books</button></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-t="ov" aria-selected="true">Overview</button>
       <button role="tab" data-t="pl" aria-selected="false">Profit and loss</button>
@@ -290,6 +319,10 @@ details.card > .inner{padding:0 18px 18px;display:flex;flex-direction:column;gap
     <div class="card scroll"><table class="wide" id="ri-table"></table></div>
   </section>
 </main>
+<dialog class="upd" id="upd" aria-labelledby="upd-title">
+  <div class="upd-head"><div><p class="eyebrow">Intacct GL export</p><h2 id="upd-title">Update the books</h2></div><button type="button" class="btn" id="upd-close">Close</button></div>
+  <div class="upd-body" id="upd-body" aria-live="polite"></div>
+</dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
@@ -533,6 +566,167 @@ document.getElementById("dl-tb").addEventListener("click", () => {
     tbRows().map(x => [x.a, x.n, x.t, f2(x.op), f2(x.mv), f2(x.cl)])));
 });
 dlReady.then(dl => { if (inClaude && !dl) document.querySelectorAll(".dl-bar .btn").forEach(b => b.hidden = true); });
+
+/* ---------- update the books ----------
+   On GitHub Pages the page saves a new Intacct GL export into this year's gl folder. That push starts
+   the "Update the books" workflow, which rebuilds both years and republishes the site. */
+const GH = (() => { const h = location.hostname.match(/^([^.]+)\.github\.io$/i), r = location.pathname.split("/").filter(Boolean)[0]; return h && r && !inClaude ? { owner: h[1], repo: r } : null; })();
+const TK = "inr-gh-token";
+let token = (() => { try { return sessionStorage.getItem(TK) || localStorage.getItem(TK); } catch (e) { return null; } })();
+const keepToken = (t, remember) => { token = t; try { (remember ? localStorage : sessionStorage).setItem(TK, t); } catch (e) {} };
+const dropToken = () => { token = null; try { sessionStorage.removeItem(TK); localStorage.removeItem(TK); } catch (e) {} };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function gh(path, opt = {}) {
+  const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}${path}`, { method: opt.method || "GET", body: opt.body,
+    headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`, "X-GitHub-Api-Version": "2022-11-28" } });
+  if (r.status === 404 && opt.allow404) return null;
+  if (!r.ok) { const e = new Error((await r.json().catch(() => ({}))).message || r.statusText); e.status = r.status; throw e; }
+  return r.status === 204 ? null : r.json();
+}
+function parseCsv(text) {
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x !== ""));
+}
+const fyFrom = `${D.meta.fy.slice(0, 4)}-04`, fyTo = `${+D.meta.fy.slice(0, 4) + 1}-03`;
+const usedFor = {}; D.sources.forEach(s => (s.used || "").split(" ").filter(Boolean).forEach(m => usedFor[m] = s.f));
+/* the same checks the build would trip over, plus where the file would go */
+function readGl(text, fileName) {
+  const rows = parseCsv(text.replace(/^﻿/, "")), head = rows.shift() || [];
+  const need = ["Batch posting date", "Account no", "Txn currency", "Net Trx Amount", "Record number"];
+  const miss = need.filter(h => !head.includes(h));
+  if (miss.length) return { err: `${fileName} doesn't look like the Intacct GL detail export: it has no ${miss.join(", ")} column.` };
+  const di = head.indexOf("Batch posting date"), ci = head.indexOf("Txn currency"), n = {};
+  let inr = 0, badDate = 0;
+  for (const r of rows) {
+    const m = /^(\d{1,2})\/(\d{2})\/(\d{4})$/.exec((r[di] || "").trim());
+    if (!m) { badDate++; continue; }
+    const k = `${m[3]}-${m[2]}`; n[k] = (n[k] || 0) + 1; if (r[ci] === "INR") inr++;
+  }
+  if (badDate) return { err: `${badDate} rows have a posting date that isn't in the day/month/year form the export normally uses (for example 1/06/2026). Re-export from Intacct without opening the file in Excel first.` };
+  const months = Object.keys(n).sort();
+  if (!months.length) return { err: `${fileName} has no GL lines.` };
+  const out = months.filter(m => m < fyFrom || m > fyTo);
+  if (out.length) return { err: `This file has lines for ${out.map(labY).join(", ")}, outside FY ${D.meta.fy}. Export only ${labY(fyFrom)} to ${labY(fyTo)}, or switch to that year's page first.` };
+  const gaps = []; for (let d = new Date(+months[0].slice(0, 4), +months[0].slice(5) - 1); ; d.setMonth(d.getMonth() + 1)) {
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; if (k > months[months.length - 1]) break; if (!n[k]) gaps.push(k);
+  }
+  const a = months[0], b = months[months.length - 1];
+  return { rows: rows.length, inr, months, n, gaps, name: `usd_gl_${a}${b !== a ? "_to_" + b : ""}.csv` };
+}
+const b64 = buf => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+
+const dlg = document.getElementById("upd"), body = document.getElementById("upd-body");
+let busy = false;
+function viewToken(msg) {
+  body.innerHTML = `
+    <p>The new export is saved to GitHub, which rebuilds the books and republishes this page in a few minutes. To do that from this page it needs a GitHub access token that can write to <span class="num">${esc(GH.owner)}/${esc(GH.repo)}</span>.</p>
+    <ol class="note" style="max-width:none">
+      <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a fine-grained token</a> on GitHub.</li>
+      <li>Repository access: <b>Only select repositories</b>, then ${esc(GH.repo)}.</li>
+      <li>Permissions: <b>Contents</b> read and write, <b>Actions</b> read-only.</li>
+      <li>Generate it and paste it below.</li>
+    </ol>
+    ${msg ? `<p class="msg bad">${esc(msg)}</p>` : ""}
+    <label class="field">GitHub token<input type="password" id="upd-tok" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+    <label class="check"><input type="checkbox" id="upd-keep"> Remember on this device (otherwise it's forgotten when you close the tab)</label>
+    <div class="actions"><button type="button" class="btn primary" id="upd-tok-go">Continue</button></div>`;
+  const go = async () => {
+    const t = document.getElementById("upd-tok").value.trim(); if (!t) return;
+    const keep = document.getElementById("upd-keep").checked; token = t;
+    try { await gh(""); keepToken(t, keep); viewFile(); }
+    catch (e) { token = null; viewToken(e.status === 401 ? "GitHub didn't accept that token. Check it was copied in full and hasn't expired." : `GitHub said: ${e.message}`); }
+  };
+  document.getElementById("upd-tok-go").addEventListener("click", go);
+  document.getElementById("upd-tok").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  document.getElementById("upd-tok").focus();
+}
+function viewFile(msg) {
+  body.innerHTML = `
+    <p>Export the <b>GL detail</b> report from Intacct for entity AUS055 with the usual columns, for the month just closed. If anything was posted back into an earlier month, export from 1 April instead: the newest file wins for every month it covers.</p>
+    ${msg ? `<p class="msg bad">${esc(msg)}</p>` : ""}
+    <label class="drop" id="upd-drop"><input type="file" id="upd-file" accept=".csv,text/csv"><b>Choose the CSV export</b><span class="dim">or drop it here</span></label>
+    <div class="actions"><button type="button" class="linkish" id="upd-forget">Forget my GitHub token</button></div>`;
+  const pick = async f => { if (!f) return; const buf = await f.arrayBuffer(); const g = readGl(new TextDecoder("utf-8").decode(buf), f.name); g.err ? viewFile(g.err) : viewConfirm(g, buf, f.name); };
+  document.getElementById("upd-file").addEventListener("change", e => pick(e.target.files[0]));
+  const drop = document.getElementById("upd-drop");
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); pick(e.dataTransfer.files[0]); });
+  document.getElementById("upd-forget").addEventListener("click", () => { dropToken(); viewToken(); });
+}
+function viewConfirm(g, buf, fileName) {
+  const span = g.months.length > 1 ? `${labY(g.months[0])} to ${labY(g.months[g.months.length - 1])}` : labY(g.months[0]);
+  const repl = g.months.filter(m => usedFor[m]).map(m => `${labY(m)} (now from ${usedFor[m]})`);
+  const path = `${D.meta.glFolder}/${g.name}`;
+  body.innerHTML = `
+    <dl class="facts">
+      <dt>File</dt><dd class="num">${esc(fileName)}</dd>
+      <dt>Covers</dt><dd>${span}</dd>
+      <dt>Lines</dt><dd><span class="num">${g.rows.toLocaleString("en-IN")}</span> <span class="dim">· ${g.inr.toLocaleString("en-IN")} in INR</span></dd>
+      <dt>New months</dt><dd>${g.months.filter(m => !usedFor[m]).map(labY).join(", ") || "None"}</dd>
+      <dt>Replaces</dt><dd>${repl.length ? esc(repl.join("; ")) : "Nothing"}</dd>
+      <dt>Saved as</dt><dd class="num">${esc(path)}</dd>
+    </dl>
+    ${g.gaps.length ? `<p class="msg warn">No lines at all for ${g.gaps.map(labY).join(", ")}. Check the report's date range before going on.</p>` : ""}
+    <p class="note" style="max-width:none">Once saved, the rebuilt books go live without a further review. If the trial balance doesn't net to nil, the balance sheet doesn't balance or a new account has no Schedule III caption, nothing is published and the page stays as it is.</p>
+    <div class="actions"><button type="button" class="btn" id="upd-back">Choose another file</button><button type="button" class="btn primary" id="upd-go">Save and rebuild</button></div>`;
+  document.getElementById("upd-back").addEventListener("click", () => viewFile());
+  document.getElementById("upd-go").addEventListener("click", () => run(g, buf, path, span));
+}
+function viewSteps(st, extra = "") {
+  const icon = s => s === "done" ? `<span class="chip ok">Done</span>` : s === "run" ? `<span class="chip info">Working</span>` : s === "fail" ? `<span class="chip bad">Stopped</span>` : `<span class="chip info" style="opacity:.55">Waiting</span>`;
+  body.innerHTML = `<ol class="steps">${st.map(([t, s]) => `<li>${icon(s)}<span>${t}</span></li>`).join("")}</ol>${extra}`;
+}
+async function run(g, buf, path, span) {
+  busy = true;
+  const st = [["Save the export to GitHub", "run"], ["Rebuild the books and run the checks", "wait"], ["Republish this page", "wait"]];
+  const step = (i, s, extra) => { st[i][1] = s; viewSteps(st, extra); };
+  viewSteps(st);
+  try {
+    const enc = path.split("/").map(encodeURIComponent).join("/");
+    const ex = await gh(`/contents/${enc}?ref=main`, { allow404: true });
+    const res = await gh(`/contents/${enc}`, { method: "PUT", body: JSON.stringify({ message: `Add Intacct GL export for ${span}`, content: b64(buf), branch: "main", ...(ex ? { sha: ex.sha } : {}) }) });
+    const sha = res.commit.sha, stamp = res.commit.committer.date.slice(0, 16).replace("T", " ");
+    step(0, "done"); step(1, "run");
+    let wf = null;
+    for (let i = 0; i < 150 && !(wf && wf.status === "completed"); i++) {
+      await sleep(i ? 5000 : 3000);
+      const r = await gh(`/actions/runs?head_sha=${sha}&per_page=10`);
+      wf = (r.workflow_runs || []).find(x => (x.path || "").endsWith("update-books.yml")) || null;
+      if (!wf && i === 24) step(1, "run", `<p class="msg warn">The rebuild hasn't started yet. GitHub Actions may be busy, or switched off for this repository.</p>`);
+    }
+    const link = wf ? ` <a href="${esc(wf.html_url)}" target="_blank" rel="noopener">Open the run on GitHub</a>.` : "";
+    if (!wf || wf.status !== "completed") return step(1, "fail", `<p class="msg warn">The export is saved, but the rebuild is taking longer than expected. Check again in a few minutes.${link}</p>`);
+    if (wf.conclusion !== "success") return step(1, "fail", `<p class="msg bad">The rebuild stopped, so nothing was published and the page is unchanged. The export is saved on GitHub. The run shows which check failed: usually a new account that needs a Schedule III caption.${link}</p>`);
+    step(1, "done"); step(2, "run");
+    for (let i = 0; i < 36; i++) {
+      await sleep(10000);
+      const html = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: "no-store" }).then(r => r.ok ? r.text() : "").catch(() => "");
+      if (html.includes(`"f":"${g.name}"`) && html.includes(`"mod":"${stamp}"`)) {
+        busy = false;
+        return step(2, "done", `<div class="actions"><button type="button" class="btn primary" onclick="location.reload()">Reload to see the new figures</button></div>`);
+      }
+    }
+    step(2, "fail", `<p class="msg warn">The books were rebuilt, but the page hasn't refreshed yet. Reload in a minute or two.</p>`);
+  } catch (e) {
+    if (e.status === 401) { dropToken(); viewToken("GitHub no longer accepts the saved token. Paste a new one."); }
+    else step(st.findIndex(s => s[1] === "run"), "fail", `<p class="msg bad">${e.status === 403 || e.status === 404 ? "The token can't write to this repository. Check it has Contents read and write for " + esc(GH.repo) + "." : "GitHub said: " + esc(e.message)}</p>`);
+  } finally { busy = false; }
+}
+if (GH) {
+  const open = document.getElementById("upd-open"); open.hidden = false;
+  open.addEventListener("click", () => { dlg.showModal(); if (!busy) token ? viewFile() : viewToken(); });
+  document.getElementById("upd-close").addEventListener("click", () => dlg.close());
+}
 
 /* ---------- checks ---------- */
 function renderChecks() {

@@ -33,7 +33,7 @@ $yeRec = if (Test-Path "$o\year_end_rec.csv") { @(Import-Csv "$o\year_end_rec.cs
 $data = [ordered]@{
   months = $months; tb = @($tb); pl = @($pl); bs = @($bs); checks = @($checks); review = @($review); lines = $lines
   excluded = @($excluded); usdOnly = @($usdOnly); sources = @($sources); openRec = $openRec; yeRec = $yeRec
-  meta = [ordered]@{ fy = $cfg.fy; entity = $cfg.entity; yeFile = $cfg.yearEndAudited; reviewFile = $cfg.reviewItems; text = $cfg.text; bridge = $cfg.bridge; inrLines = $lines.Count; exLines = $exRows.Count }
+  meta = [ordered]@{ fy = $cfg.fy; entity = $cfg.entity; glFolder = $cfg.glFolder; yeFile = $cfg.yearEndAudited; reviewFile = $cfg.reviewItems; text = $cfg.text; bridge = $cfg.bridge; inrLines = $lines.Count; exLines = $exRows.Count }
 }
 $json = $data | ConvertTo-Json -Depth 6 -Compress
 $outFile = P "reports\inr_books_fy$($cfg.fy).html"

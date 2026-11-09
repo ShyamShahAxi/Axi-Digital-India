@@ -1,0 +1,66 @@
+# Rebuilds the INR books whenever a GL export is added to a year's gl folder (from the
+# "Update the books" button on the site, or a normal push), then commits the outputs so
+# GitHub Pages republishes. Nothing is committed if the books don't hold together.
+name: Update the books
+
+on:
+  push:
+    branches: [main]
+    paths: ['data/*/gl/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-books
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # A fresh checkout gives every file the same time, but the build lets the newest export
+      # win for any month two files cover. Date each GL file by when it was committed.
+      - name: Date GL files by commit time
+        shell: powershell
+        run: |
+          Get-ChildItem data -Recurse -Filter *.csv | Where-Object { $_.Directory.Name -eq 'gl' } | ForEach-Object {
+            $t = git log -1 --format=%cI -- $_.FullName
+            if ($t) { $_.LastWriteTime = [datetime]$t }
+          }
+
+      - name: Build the INR books
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-ChildItem data -Directory -Filter 'fy*' | ForEach-Object { Join-Path $_.FullName 'config.json' } | Where-Object { Test-Path $_ } | ForEach-Object {
+            Write-Output "Building $_"
+            & .\scripts\build_inr_books.ps1 -Config $_
+            & .\scripts\build_dashboard_monthly.ps1 -Config $_
+          }
+
+      - name: Stop if the books don't hold together
+        shell: powershell
+        run: |
+          $must = 'Trial balance nets to nil', 'Balance sheet balances', 'Balance sheet accounts mapped'
+          $bad = foreach ($f in Get-ChildItem data -Recurse -Filter checks_by_month.csv) {
+            Import-Csv $f.FullName | Where-Object { $_.check -in $must -and $_.status -ne 'ok' } |
+              ForEach-Object { "$($f.Directory.Parent.Name) $($_.month): $($_.check) ($($_.detail))" }
+          }
+          if ($bad) { $bad | ForEach-Object { Write-Output "::error::$_" }; exit 1 }
+
+      - name: Publish
+        shell: powershell
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data reports
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { Write-Output 'Nothing changed'; exit 0 }
+          git commit -m "Rebuild INR books after GL upload ($env:GITHUB_SHA)"
+          git push

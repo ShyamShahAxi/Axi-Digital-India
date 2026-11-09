@@ -55,6 +55,13 @@ Mappings: `data/mappings/schedule3_fy2026-27.csv` (captions, audited opening, ac
 4. Update `review_items_fy2026-27.csv`, then run `.\scripts\build_dashboard_monthly.ps1` to produce `reports/inr_books_fy2026-27.html`.
 5. Commit.
 
+**From the site instead:** the **Update the books** button on the GitHub Pages dashboard saves a GL
+export into the year's `gl/` folder (it needs a fine-grained GitHub token with Contents read and write
+and Actions read on this repository). The push starts `.github/workflows/update-books.yml`, which runs
+steps 2 and 4 for every year and commits the outputs so Pages republishes. It stops without publishing
+if the trial balance doesn't net to nil, the balance sheet doesn't balance or a balance sheet account is
+unmapped. Pull before working locally afterwards. Review items and new mappings are still updated by hand.
+
 ### Year end
 Save the signed balance sheet as `data/fy2026-27/audited_31mar2027.csv` and rebuild. The Annual rec
 tab then compares the 31 Mar 2027 books with the audited figures by caption. The opening position
